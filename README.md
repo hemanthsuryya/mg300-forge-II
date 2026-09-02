@@ -1,3 +1,13 @@
+---
+title: Tone Chaser
+emoji: 🎸
+colorFrom: indigo
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Tone Chaser
 
 Drop in a song. It isolates the guitar, finds the sections where the guitar is
