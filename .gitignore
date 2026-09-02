@@ -1,0 +1,9 @@
+.venv/
+jobs/*
+!jobs/.gitkeep
+__pycache__/
+*.pyc
+samples/*.wav
+.env
+data/
+*.bak

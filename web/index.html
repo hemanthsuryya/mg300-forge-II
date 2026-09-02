@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Tone Chaser</title>
+<style>
+/* ------------------------------------------------------------------ *
+ * Tone Chaser
+ *
+ * Palette is brass-on-charcoal: the accent is the colour of a wound
+ * string, not a UI orange. Guitar references are structural rather than
+ * decorative - six strings of descending gauge in the drop zone and the
+ * mark, fret-inlay dots on the section rules.
+ * ------------------------------------------------------------------ */
+:root{
+  --bg:#0a0a0c;
+  --bg-2:#0e0e12;
+  --panel:#111116;
+  --panel-2:#0c0c10;
+  --line:#212127;
+  --line-soft:#191920;
+  --ink:#edeae5;
+  --dim:#8b8b96;
+  --faint:#5a5a64;
+  --hot:#d8a25c;
+  --hot-2:#eabe83;
+  --hot-wash:rgba(216,162,92,.10);
+  --hot-line:rgba(216,162,92,.34);
+  --ok:#7cc79b;
+  --warn:#dfb45f;
+  --bad:#e0796e;
+  --r:12px;
+  --r-lg:16px;
+  --bar:56px;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:14.5px/1.6 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  font-variant-numeric:tabular-nums;
+  min-height:100dvh;
+}
+a{color:var(--hot);text-decoration:none}
+a:hover{color:var(--hot-2)}
+::selection{background:var(--hot);color:#171006}
+:focus-visible{outline:2px solid var(--hot);outline-offset:2px;border-radius:4px}
+
+/* ---- top bar ------------------------------------------------------ */
+.topbar{
+  position:sticky;top:0;z-index:50;height:var(--bar);
+  border-bottom:1px solid var(--line-soft);
+  background:color-mix(in srgb,var(--bg) 82%,transparent);
+  backdrop-filter:saturate(150%) blur(14px);
+  -webkit-backdrop-filter:saturate(150%) blur(14px);
+}
+.topbar-in{
+  max-width:1180px;margin:0 auto;height:100%;padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+}
+.brand{display:flex;align-items:center;gap:11px;color:var(--ink);min-width:0}
+.brand:hover{color:var(--ink)}
+.brand-mark{flex:none;width:22px;height:22px;color:var(--hot)}
+.brand-name{font-size:15px;font-weight:560;letter-spacing:-.012em;white-space:nowrap}
+.brand-name em{font-style:normal;color:var(--hot)}
+.topbar-right{display:flex;align-items:center;gap:18px;min-width:0}
+
+/* ---- account ------------------------------------------------------ */
+.acct{display:flex;align-items:center;gap:9px;min-width:0}
+.avatar{
+  width:27px;height:27px;border-radius:50%;flex:none;object-fit:cover;
+  background:linear-gradient(150deg,#2a2a33,#191920);
+  border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  font:600 11.5px/1 inherit;color:var(--hot);letter-spacing:.02em;
+}
+.acct-txt{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.acct-name{font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.linkbtn{
+  background:none;border:0;padding:0;color:var(--faint);font:inherit;font-size:11.5px;
+  cursor:pointer;text-decoration:none;text-align:left;transition:color .14s;
+}
+.linkbtn:hover{color:var(--hot)}
+.linkbtn:disabled{opacity:.35;cursor:default}
+
+/* ---- shell -------------------------------------------------------- */
+.wrap{max-width:1180px;margin:0 auto;padding:40px 24px 100px}
+/* With nothing analysed yet the composer is the whole page, so centre it
+   instead of leaving a screen of dead space beneath. */
+body.empty .wrap{
+  min-height:calc(100dvh - var(--bar));
+  display:flex;flex-direction:column;justify-content:center;padding-bottom:64px;
+}
+.sub{color:var(--dim);font-size:12.5px}
+.err{color:var(--bad)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+
+/* ---- hero --------------------------------------------------------- */
+.hero{margin:0 0 26px}
+.hero h1{
+  margin:0 0 8px;font-size:clamp(26px,3.2vw,36px);font-weight:560;
+  letter-spacing:-.028em;line-height:1.12;
+}
+.hero h1 em{font-style:normal;color:var(--hot)}
+.hero p{margin:0;color:var(--dim);font-size:14.5px;max-width:56ch}
+
+/* ---- cards -------------------------------------------------------- */
+.card{
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:22px;margin:18px 0;box-shadow:var(--shadow);
+}
+
+/* ---- drop zone: six strings --------------------------------------- */
+.drop{
+  position:relative;overflow:hidden;cursor:pointer;
+  border:1px solid var(--line);border-radius:var(--r);
+  background:radial-gradient(120% 140% at 50% 0%,#141419 0%,#0c0c10 70%);
+  min-height:212px;display:grid;place-items:center;text-align:center;
+  padding:34px 24px;transition:border-color .18s,background .18s;
+}
+.drop:hover{border-color:#2e2e37}
+.drop.hot{border-color:var(--hot-line);background:radial-gradient(120% 140% at 50% 0%,#191309 0%,#0c0c10 70%)}
+.strings{
+  position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
+  opacity:.34;transition:opacity .2s;
+  /* Fade both ends so the strings read as strings rather than as rules
+     butting into the border. */
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);
+}
+.drop:hover .strings{opacity:.5}
+.drop.hot .strings{opacity:.9}
+.strings line{stroke:#54545f;transition:stroke .2s}
+.drop.hot .strings line{stroke:var(--hot)}
+/* Plucked: each string settles at its own rate, low strings slowest. */
+@keyframes strum{0%,100%{transform:translateY(0)}50%{transform:translateY(var(--amp,1px))}}
+.drop.hot .strings line{animation:strum var(--dur,.2s) ease-in-out infinite}
+.drop-in{position:relative;z-index:1}
+.drop-title{font-size:16.5px;font-weight:560;letter-spacing:-.015em}
+.drop-sub{color:var(--dim);font-size:12.5px;margin-top:5px}
+.drop-sub u{text-decoration:none;color:var(--hot);border-bottom:1px solid var(--hot-line)}
+.fname{margin-top:12px;font-size:12.5px;color:var(--hot)}
+@media(prefers-reduced-motion:reduce){.drop.hot .strings line{animation:none}}
+
+/* ---- composer controls -------------------------------------------- */
+.composer-foot{display:grid;grid-template-columns:1fr 130px auto;gap:14px;align-items:end;margin-top:18px}
+.field{min-width:0}
+label{display:block;font-size:11px;color:var(--faint);margin:0 0 7px;
+letter-spacing:.09em;text-transform:uppercase;font-weight:500}
+input[type=text],select{
+  width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
+  border-radius:9px;padding:11px 13px;font:inherit;font-size:13.5px;transition:border-color .15s;
+}
+input[type=text]::placeholder{color:var(--faint)}
+input[type=text]:focus,select:focus{outline:none;border-color:var(--hot-line)}
+select{appearance:none;cursor:pointer;
+  background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),linear-gradient(135deg,var(--dim) 50%,transparent 50%);
+  background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:34px}
+button{
+  background:linear-gradient(180deg,var(--hot-2),var(--hot));color:#1a1207;border:0;
+  border-radius:9px;padding:12px 24px;font:600 13.5px/1 inherit;letter-spacing:.01em;
+  cursor:pointer;transition:filter .15s,transform .08s;white-space:nowrap;
+}
+button:hover:not(:disabled){filter:brightness(1.07)}
+button:active:not(:disabled){transform:translateY(1px)}
+button:disabled{opacity:.4;cursor:default}
+button.ghost{background:none;color:var(--dim);border:1px solid var(--line);font-weight:500}
+button.ghost:hover{color:var(--ink);border-color:#2e2e37;filter:none}
+.hint{margin-top:12px}
+.grid2{display:grid;grid-template-columns:1fr 200px;gap:14px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+
+/* ---- section rule with fret inlays --------------------------------- */
+.sect{display:flex;align-items:center;gap:14px;margin:34px 0 12px}
+.sect-label{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+font-weight:600;white-space:nowrap}
+.sect-line{flex:1;height:7px;min-width:20px;opacity:.75;
+  background-image:radial-gradient(circle,var(--line) 1.5px,transparent 1.6px);
+  background-size:26px 7px;background-position:0 50%;background-repeat:repeat-x}
+
+/* ---- progress ------------------------------------------------------ */
+.bar{height:3px;background:var(--line);border-radius:99px;overflow:hidden;flex:1;min-width:160px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--hot),var(--hot-2));transition:width .35s ease}
+pre.log{
+  background:var(--panel-2);border:1px solid var(--line-soft);border-radius:9px;padding:13px 14px;
+  max-height:190px;overflow:auto;font:11.5px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:var(--dim);margin:14px 0 0;
+}
+
+/* ---- history ------------------------------------------------------- */
+.hist{list-style:none;margin:0;padding:0}
+.hist li{display:flex;align-items:center;gap:14px;padding:11px 12px;border-radius:9px;
+transition:background .13s;margin:0 -12px}
+.hist li:hover{background:rgba(255,255,255,.028)}
+.hist .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px}
+.hist .st{font-size:11.5px;color:var(--faint);flex:none;white-space:nowrap}
+.hist .acts{display:flex;gap:12px;flex:none}
+.pill{font-size:10.5px;padding:2px 8px;border-radius:99px;border:1px solid var(--line);
+color:var(--dim);flex:none;letter-spacing:.02em}
+
+/* ---- results ------------------------------------------------------- */
+h2{font-size:19px;font-weight:560;letter-spacing:-.02em;margin:0}
+.badge{display:inline-block;padding:2.5px 10px;border-radius:99px;font-size:11px;
+border:1px solid var(--line);color:var(--dim);letter-spacing:.02em}
+.confbar{width:110px;height:4px;background:var(--line);border-radius:99px;overflow:hidden}
+.confbar i{display:block;height:100%;border-radius:99px}
+audio{width:100%;margin-top:12px;height:34px;filter:invert(.92) hue-rotate(180deg) saturate(.15)}
+.tl{position:relative;height:22px;background:var(--panel-2);border:1px solid var(--line-soft);
+border-radius:6px;margin-top:12px;overflow:hidden}
+.tl i{position:absolute;top:0;bottom:0;background:var(--hot);opacity:.7}
+
+.chain{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:12px;margin-top:16px}
+.blk{border:1px solid var(--line);border-radius:11px;padding:13px 14px;background:var(--panel-2);
+transition:border-color .18s,box-shadow .18s}
+.blk.off{opacity:.36}
+.blk h3{margin:0 0 4px;font-size:10px;letter-spacing:.14em;color:var(--faint);
+text-transform:uppercase;font-weight:600}
+.blk .model{font-size:14.5px;font-weight:600;color:var(--hot);letter-spacing:-.01em}
+.blk.off .model{color:var(--dim)}
+.kv{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:4px 0;
+border-top:1px solid var(--line-soft)}
+.kv span:last-child{color:var(--ink)}
+.why{color:var(--dim);font-size:11.5px;margin-top:10px;line-height:1.55}
+.blk.changed{border-color:var(--hot-line);box-shadow:0 0 0 1px var(--hot-wash)}
+.blk .tag{display:inline-block;font-size:9.5px;letter-spacing:.1em;color:var(--hot);
+text-transform:uppercase;border:1px solid var(--hot-line);border-radius:99px;
+padding:2px 8px;margin-top:9px}
+
+input[type=file]{font-size:12px;color:var(--dim);max-width:100%}
+input[type=file]::file-selector-button{
+  background:none;border:1px solid var(--line);color:var(--ink);border-radius:8px;
+  padding:8px 15px;font:500 12.5px/1 inherit;cursor:pointer;margin-right:11px;
+  transition:border-color .15s,color .15s;
+}
+input[type=file]::file-selector-button:hover{border-color:var(--hot-line);color:var(--hot)}
+details summary{cursor:pointer;color:var(--dim);font-size:12px;padding:4px 0}
+details summary:hover{color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:10px}
+td,th{padding:6px 10px;border-bottom:1px solid var(--line-soft);text-align:left}
+th{color:var(--faint);font-weight:500;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.warnbox{border-left:2px solid var(--warn);padding:2px 0 2px 13px;color:var(--dim);font-size:12.5px}
+
+/* ---- radar --------------------------------------------------------- */
+.tonegrid{display:grid;grid-template-columns:342px 1fr;gap:26px;align-items:start;margin-top:16px}
+.radarbox{background:var(--panel-2);border:1px solid var(--line-soft);border-radius:12px;padding:10px}
+.radar{width:100%;height:auto;display:block;touch-action:none}
+.radar .grid{fill:none;stroke:var(--line);stroke-width:1}
+.radar .spoke{stroke:var(--line);stroke-width:1}
+.radar .ghost{fill:rgba(139,139,150,.09);stroke:var(--faint);stroke-width:1.5;stroke-dasharray:4 3}
+.radar .live{fill:rgba(216,162,92,.15);stroke:var(--hot);stroke-width:2}
+.radar .cap{fill:rgba(124,199,155,.12);stroke:var(--ok);stroke-width:1.5;stroke-dasharray:2 3}
+.radar .hit{fill:var(--hot);stroke:var(--panel-2);stroke-width:2;cursor:grab}
+.radar .hit:hover,.radar .hit:focus{r:8;outline:none}
+.radar .hit.dragging{cursor:grabbing}
+.radar text{fill:var(--dim);font:10.5px -apple-system,system-ui,sans-serif}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--dim);margin:8px 0 0 8px}
+.legend i{display:inline-block;width:14px;height:0;border-top:2px solid;margin-right:5px;vertical-align:middle}
+.axrow{display:flex;align-items:center;gap:10px;font-size:12px;padding:2px 0}
+.axrow b{width:54px;color:var(--ink);font-weight:560;cursor:help;font-size:12px}
+.axrow input[type=range]{flex:1;accent-color:var(--hot);height:3px}
+.axrow span{width:26px;text-align:right;color:var(--dim)}
+
+.vpanel{margin-top:16px;border-top:1px solid var(--line-soft);padding-top:16px}
+.vbar{height:4px;border-radius:99px;background:var(--line);overflow:hidden;flex:1;min-width:110px}
+.vbar i{display:block;height:100%;border-radius:99px}
+.vtable td.d{text-align:right}
+
+/* ---- responsive ---------------------------------------------------- */
+@media(max-width:940px){.tonegrid{grid-template-columns:1fr}}
+@media(max-width:760px){
+  .wrap{padding:28px 18px 72px}
+  .topbar-in{padding:0 18px}
+  .composer-foot{grid-template-columns:1fr}
+  .composer-foot .field-go button{width:100%}
+  .grid2{grid-template-columns:1fr}
+  #health{display:none}
+  .drop{min-height:172px;padding:28px 18px}
+  .hist li{flex-wrap:wrap;gap:8px}
+  .hist .nm{flex-basis:100%}
+}
+@media(max-width:480px){
+  .acct-txt{display:none}
+  .hero h1{font-size:24px}
+}
+/* Large Mac displays: hold the measure instead of letting it sprawl. */
+@media(min-width:1600px){
+  :root{--r-lg:18px}
+  .wrap,.topbar-in{max-width:1280px}
+}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="/">
+      <!-- the nut, and six strings of descending gauge -->
+      <svg class="brand-mark" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="2.4" y="1.7" width="2.3" height="20.6" rx="1.15" fill="currentColor"/>
+        <g stroke="currentColor" stroke-linecap="round">
+          <line x1="6" y1="5.4"  x2="22" y2="5.4"  stroke-width="1.7"/>
+          <line x1="6" y1="8.3"  x2="22" y2="8.3"  stroke-width="1.4"/>
+          <line x1="6" y1="11.2" x2="22" y2="11.2" stroke-width="1.1"/>
+          <line x1="6" y1="14.1" x2="22" y2="14.1" stroke-width=".85"/>
+          <line x1="6" y1="17"   x2="22" y2="17"   stroke-width=".62"/>
+          <line x1="6" y1="19.9" x2="22" y2="19.9" stroke-width=".45"/>
+        </g>
+      </svg>
+      <span class="brand-name">Tone <em>Chaser</em></span>
+    </a>
+    <div class="topbar-right">
+      <div class="sub" id="health"></div>
+      <div class="acct" id="acct" hidden>
+        <div class="avatar" id="avatar"></div>
+        <div class="acct-txt">
+          <span class="acct-name" id="acctName"></span>
+          <form method="post" action="/auth/logout" style="margin:0">
+            <button class="linkbtn" type="submit">Sign out</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<div class="hero">
+  <h1>Chase a tone to its <em>settings</em>.</h1>
+  <p>Drop in a song. Tone Chaser isolates the guitar, splits it into distinct
+     tones, measures each one, and writes an MG-300 MKII preset recipe.</p>
+</div>
+
+<section class="card" id="inputCard">
+  <div class="drop" id="drop" role="button" tabindex="0"
+       aria-label="Drop a song here, or click to choose an audio file">
+    <svg class="strings" viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true"
+         stroke-linecap="round" vector-effect="non-scaling-stroke">
+      <line x1="0" y1="34"  x2="600" y2="34"  stroke-width="2.4" vector-effect="non-scaling-stroke" style="--dur:.26s;--amp:1.4px"/>
+      <line x1="0" y1="60"  x2="600" y2="60"  stroke-width="1.9" vector-effect="non-scaling-stroke" style="--dur:.23s;--amp:1.2px"/>
+      <line x1="0" y1="86"  x2="600" y2="86"  stroke-width="1.5" vector-effect="non-scaling-stroke" style="--dur:.2s;--amp:1px"/>
+      <line x1="0" y1="112" x2="600" y2="112" stroke-width="1.1" vector-effect="non-scaling-stroke" style="--dur:.17s;--amp:.85px"/>
+      <line x1="0" y1="138" x2="600" y2="138" stroke-width=".8" vector-effect="non-scaling-stroke" style="--dur:.15s;--amp:.7px"/>
+      <line x1="0" y1="164" x2="600" y2="164" stroke-width=".55" vector-effect="non-scaling-stroke" style="--dur:.13s;--amp:.6px"/>
+    </svg>
+    <div class="drop-in">
+      <div class="drop-title">Drop a song here</div>
+      <div class="drop-sub">or <u>choose a file</u> &nbsp;·&nbsp; mp3, wav, flac, m4a</div>
+      <div class="fname" id="fname"></div>
+    </div>
+  </div>
+
+  <div class="composer-foot">
+    <div class="field">
+      <label for="url">Or paste a link</label>
+      <input type="text" id="url" placeholder="https://..."/>
+    </div>
+    <div class="field">
+      <label for="maxTones">Max tones</label>
+      <select id="maxTones">
+        <option>2</option><option>3</option><option>4</option>
+        <option selected>5</option><option>6</option>
+      </select>
+    </div>
+    <div class="field field-go">
+      <button id="go">Analyze</button>
+    </div>
+  </div>
+  <div class="sub hint" id="hint"></div>
+</section>
+
+<div class="card" id="progCard" style="display:none">
+  <div class="row"><b id="statusText">Working</b>
+    <div class="bar"><i id="progBar" style="width:0%"></i></div>
+    <span class="mono sub" id="progPct">0%</span>
+  </div>
+  <pre class="log" id="log"></pre>
+</div>
+
+<div id="histCard" hidden>
+  <div class="sect">
+    <span class="sect-label">Your analyses</span>
+    <span class="sect-line"></span>
+    <button class="linkbtn" id="histRefresh">Refresh</button>
+  </div>
+  <ul class="hist" id="hist"></ul>
+</div>
+
+<div id="results"></div>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+let file = null, jobId = null, timer = null;
+
+// The session can expire while the page is open. Rather than letting every
+// call site handle that, one wrapper turns a 401 into a trip to the login page.
+const _fetch = window.fetch.bind(window);
+window.fetch = async (...args) => {
+  const r = await _fetch(...args);
+  if (r.status === 401) {
+    if (timer) clearInterval(timer);
+    location.href = '/login?notice=Your+session+expired.+Sign+in+again.';
+    throw new Error('signed out');
+  }
+  return r;
+};
+
+fetch('/api/health').then(r=>r.json()).then(h=>{
+  const bits = [];
+  bits.push(h.demucs ? 'Demucs ready' : 'Demucs NOT installed - falling back to mix analysis');
+  bits.push(h.yt_dlp ? 'yt-dlp ready' : 'yt-dlp missing (URLs disabled)');
+  $('#health').textContent = bits.join(' · ');
+  if(!h.demucs) $('#health').style.color = 'var(--warn)';
+  if(h.user){
+    $('#acct').hidden = false;
+    $('#acctName').textContent = h.user.name || h.user.email;
+    const av = $('#avatar');
+    if(h.user.picture){
+      const img = document.createElement('img');
+      img.src = h.user.picture; img.alt = ''; img.className = 'avatar';
+      img.referrerPolicy = 'no-referrer';
+      av.replaceWith(img);
+    } else {
+      av.textContent = (h.user.name || h.user.email).trim()[0].toUpperCase();
+    }
+  }
+});
+
+// ---- past analyses ------------------------------------------------------
+const STATE_LABEL = {done:'done', error:'failed', running:'running', queued:'queued'};
+
+// With nothing to show, the composer is centred rather than stranded at the
+// top of a tall Mac display under a screen of empty space.
+function setEmpty(){
+  const hasResults = $('#results').children.length > 0;
+  const hasHistory = !$('#histCard').hidden;
+  const busy = $('#progCard').style.display !== 'none';
+  document.body.classList.toggle('empty', !hasResults && !hasHistory && !busy);
+}
+
+async function loadHistory(){
+  let d;
+  try { d = await (await fetch('/api/jobs')).json(); } catch(e){ return; }
+  const jobs = d.jobs || [];
+  $('#histCard').hidden = jobs.length === 0;
+  setEmpty();
+  $('#hist').innerHTML = jobs.map(j => {
+    const when = j.created_at ? new Date(j.created_at).toLocaleString(undefined,
+      {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}) : '';
+    const tones = j.state === 'done' && j.tone_count
+      ? `<span class="pill">${j.tone_count} tone${j.tone_count>1?'s':''}</span>` : '';
+    const col = j.state === 'error' ? 'var(--bad)'
+              : (j.state === 'done' ? 'var(--dim)' : 'var(--warn)');
+    return `<li data-id="${esc(j.job_id)}" data-state="${esc(j.state)}">
+      <span class="nm">${esc(j.source_name || j.job_id)}</span>
+      ${tones}
+      <span class="st" style="color:${col}">${esc(STATE_LABEL[j.state]||j.state)}</span>
+      <span class="st">${esc(when)}</span>
+      <span class="acts">
+        <button class="linkbtn open" ${j.state==='done'?'':'disabled'}>Open</button>
+        <button class="linkbtn del">Delete</button>
+      </span>
+    </li>`;
+  }).join('');
+  $('#hist').querySelectorAll('li').forEach(li => {
+    const id = li.dataset.id;
+    li.querySelector('.open').onclick = () => openJob(id);
+    li.querySelector('.del').onclick = async () => {
+      if(!confirm('Delete this analysis and its audio?')) return;
+      await fetch('/api/job/' + id, {method:'DELETE'});
+      if(jobId === id){ jobId = null; $('#results').innerHTML = ''; setEmpty(); }
+      loadHistory();
+    };
+  });
+}
+
+async function openJob(id){
+  const r = await fetch('/api/job/' + id);
+  if(!r.ok) return;
+  const s = await r.json();
+  if(!s.result) return;
+  jobId = id;
+  $('#progCard').style.display = 'none';
+  render(s.result);
+  window.scrollTo({top: $('#results').offsetTop - 20, behavior:'smooth'});
+}
+
+$('#histRefresh').onclick = loadHistory;
+
+const drop = $('#drop');
+const picker = Object.assign(document.createElement('input'), {type:'file', accept:'audio/*'});
+picker.onchange = () => setFile(picker.files[0]);
+drop.onclick = () => picker.click();
+['dragenter','dragover'].forEach(e => drop.addEventListener(e, ev => {
+  ev.preventDefault(); drop.classList.add('hot');
+}));
+['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => {
+  ev.preventDefault(); drop.classList.remove('hot');
+}));
+drop.addEventListener('drop', ev => setFile(ev.dataTransfer.files[0]));
+function setFile(f){ if(!f) return; file = f; $('#fname').textContent = f.name +
+  ' · ' + (f.size/1048576).toFixed(1) + ' MB'; $('#url').value=''; }
+
+$('#go').onclick = async () => {
+  const url = $('#url').value.trim();
+  if(!file && !url){ $('#hint').textContent = 'Pick a file or paste a link first.'; return; }
+  const fd = new FormData();
+  if(file) fd.append('file', file);
+  fd.append('url', url);
+  fd.append('max_tones', $('#maxTones').value);
+  $('#go').disabled = true; $('#hint').textContent = '';
+  $('#results').innerHTML = ''; $('#progCard').style.display = ''; setEmpty();
+  const r = await fetch('/api/analyze', {method:'POST', body:fd});
+  if(!r.ok){ $('#hint').textContent = 'Error: ' + (await r.text()); $('#go').disabled=false; return; }
+  jobId = (await r.json()).job_id;
+  timer = setInterval(poll, 1200); poll();
+};
+
+async function poll(){
+  const r = await fetch('/api/job/' + jobId);
+  if(!r.ok) return;
+  const s = await r.json();
+  $('#progBar').style.width = (s.progress||0) + '%';
+  $('#progPct').textContent = (s.progress||0) + '%';
+  $('#statusText').textContent = s.status_text || s.state;
+  $('#log').textContent = (s.log||[]).join('\n');
+  $('#log').scrollTop = 1e6;
+  if(s.state === 'done'){ clearInterval(timer); $('#go').disabled = false; render(s.result);
+    loadHistory(); }
+  if(s.state === 'error'){ clearInterval(timer); $('#go').disabled = false;
+    $('#statusText').innerHTML = '<span class="err">Failed: ' + esc(s.error) + '</span>';
+    loadHistory(); }
+}
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const confColor = c => c>=.66 ? 'var(--ok)' : (c>=.4 ? 'var(--warn)' : 'var(--bad)');
+
+let AXES = [], CONFLICTS = [], TONE = {};   // tone_id -> {base, cur, preset}
+
+fetch('/api/axes').then(r=>r.json()).then(d=>{ AXES=d.axes; CONFLICTS=d.conflicts; });
+
+const R = 92, CX = 158, CY = 126;
+function axPoint(i, v){
+  const a = -Math.PI/2 + i * 2*Math.PI/AXES.length;
+  const r = R * Math.max(v,0)/100;
+  return [CX + r*Math.cos(a), CY + r*Math.sin(a)];
+}
+function poly(vals){ return AXES.map((a,i)=>axPoint(i, vals[a.id]??0).join(',')).join(' '); }
+
+function radarSvg(id){
+  const rings = [25,50,75,100].map(p =>
+    `<polygon class="grid" points="${AXES.map((a,i)=>axPoint(i,p).join(',')).join(' ')}"/>`).join('');
+  const spokes = AXES.map((a,i)=>{
+    const [x,y]=axPoint(i,100);
+    return `<line class="spoke" x1="${CX}" y1="${CY}" x2="${x}" y2="${y}"/>`;
+  }).join('');
+  const labels = AXES.map((a,i)=>{
+    const [x,y]=axPoint(i,122);
+    const anch = Math.abs(x-CX)<6 ? 'middle' : (x>CX ? 'start':'end');
+    return `<text x="${x}" y="${y+3}" text-anchor="${anch}">${esc(a.label)}</text>`;
+  }).join('');
+  const knobs = AXES.map((a,i)=>`<circle class="hit" id="hit-${id}-${a.id}" r="6" cx="0" cy="0"
+      tabindex="0" role="slider" aria-label="${esc(a.label)}"
+      aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+      data-i="${i}" data-ax="${a.id}"><title>${esc(a.label)} — ${esc(a.hint)}
+from: ${esc(a.from)}
+drives: ${esc(a.drives)}</title></circle>`).join('');
+  return `<svg class="radar" id="radar-${id}" viewBox="0 0 316 264" role="group"
+      aria-label="Tone shaping radar. Drag a point, or use the sliders below.">
+    ${rings}${spokes}
+    <polygon class="ghost" id="ghost-${id}" points=""/>
+    <polygon class="cap"   id="cap-${id}" points="" style="display:none"/>
+    <polygon class="live"  id="live-${id}" points=""/>
+    ${knobs}${labels}
+  </svg>`;
+}
+
+function drawRadar(id){
+  const t = TONE[id]; if(!t) return;
+  document.getElementById('ghost-'+id).setAttribute('points', poly(t.base));
+  document.getElementById('live-'+id).setAttribute('points', poly(t.cur));
+  AXES.forEach((a,i)=>{
+    const [x,y] = axPoint(i, t.cur[a.id]??0);
+    const c = document.getElementById(`hit-${id}-${a.id}`);
+    c.setAttribute('cx',x); c.setAttribute('cy',y);
+    c.setAttribute('aria-valuenow', Math.round(t.cur[a.id]??0));
+    const sl = document.getElementById(`sl-${id}-${a.id}`);
+    if(sl && +sl.value !== Math.round(t.cur[a.id])) sl.value = Math.round(t.cur[a.id]);
+    const nv = document.getElementById(`nv-${id}-${a.id}`);
+    if(nv) nv.textContent = Math.round(t.cur[a.id]);
+  });
+  const cf = document.getElementById('conflict-'+id);
+  if(cf) cf.style.display = (t.cur.wah||0) > 10 ? '' : 'none';
+}
+
+function bindRadar(id){
+  const svg = document.getElementById('radar-'+id);
+  let active = null;
+  const valueAt = (ev, i) => {
+    const box = svg.getBoundingClientRect();
+    const sx = 316/box.width, sy = 264/box.height;
+    const x = (ev.clientX - box.left)*sx - CX, y = (ev.clientY - box.top)*sy - CY;
+    const a = -Math.PI/2 + i*2*Math.PI/AXES.length;
+    return Math.max(0, Math.min(100, (x*Math.cos(a) + y*Math.sin(a)) / R * 100));
+  };
+  svg.querySelectorAll('.hit').forEach(c=>{
+    c.addEventListener('pointerdown', e=>{
+      active = c; c.classList.add('dragging'); c.setPointerCapture(e.pointerId); e.preventDefault();
+    });
+    c.addEventListener('pointermove', e=>{
+      if(active!==c) return;
+      TONE[id].cur[c.dataset.ax] = valueAt(e, +c.dataset.i);
+      drawRadar(id); scheduleAdjust(id);
+    });
+    const end = () => { if(active===c){ active=null; c.classList.remove('dragging'); scheduleAdjust(id, true); } };
+    c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end);
+    c.addEventListener('keydown', e=>{
+      const step = e.shiftKey ? 10 : 2;
+      let d = 0;
+      if(e.key==='ArrowUp'||e.key==='ArrowRight') d = step;
+      else if(e.key==='ArrowDown'||e.key==='ArrowLeft') d = -step;
+      else if(e.key==='Home') TONE[id].cur[c.dataset.ax] = TONE[id].base[c.dataset.ax];
+      else return;
+      e.preventDefault();
+      if(d) TONE[id].cur[c.dataset.ax] = Math.max(0, Math.min(100, TONE[id].cur[c.dataset.ax] + d));
+      drawRadar(id); scheduleAdjust(id);
+    });
+  });
+  AXES.forEach(a=>{
+    const sl = document.getElementById(`sl-${id}-${a.id}`);
+    if(sl) sl.addEventListener('input', ()=>{ TONE[id].cur[a.id] = +sl.value; drawRadar(id); scheduleAdjust(id); });
+  });
+  const rb = document.getElementById('reset-'+id);
+  if(rb) rb.addEventListener('click', ()=>{
+    TONE[id].cur = {...TONE[id].base}; drawRadar(id); scheduleAdjust(id, true);
+  });
+}
+
+const _timers = {};
+function scheduleAdjust(id, now){
+  clearTimeout(_timers[id]);
+  _timers[id] = setTimeout(()=>applyAdjust(id), now ? 0 : 180);
+}
+async function applyAdjust(id){
+  const st = document.getElementById('astat-'+id);
+  st.textContent = 'recomputing…';
+  const r = await fetch(`/api/job/${jobId}/tone/${id}/adjust`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({axes: TONE[id].cur})
+  });
+  if(!r.ok){ st.textContent = 'adjust failed'; return; }
+  const d = await r.json();
+  TONE[id].preset = d.preset;
+  document.getElementById('chain-'+id).innerHTML = d.preset.chain.map(b=>blockHtml(b, d.preset)).join('');
+  st.textContent = d.moved.length
+    ? `${d.moved.length} axis change${d.moved.length>1?'s':''} applied — highlighted blocks re-derived`
+    : 'matching the analysis exactly';
+}
+
+async function runValidate(id, input){
+  const f = input.files[0]; if(!f) return;
+  const out = document.getElementById('vout-'+id);
+  out.innerHTML = '<div class="sub">measuring the capture…</div>';
+  const fd = new FormData();
+  fd.append('file', f);
+  fd.append('axes_json', JSON.stringify(TONE[id].cur));
+  const r = await fetch(`/api/job/${jobId}/tone/${id}/validate`, {method:'POST', body:fd});
+  if(!r.ok){ out.innerHTML = `<div class="err">${esc(await r.text())}</div>`; return; }
+  const v = await r.json();
+  const col = v.overall_score>=90?'var(--ok)':(v.overall_score>=75?'var(--warn)':'var(--bad)');
+  const capPoly = document.getElementById('cap-'+id);
+  capPoly.setAttribute('points', poly(v.capture_axes)); capPoly.style.display='';
+  const warn = (v.warnings||[]).length
+    ? `<div class="warnbox" style="margin-bottom:10px">${v.warnings.map(esc).join('<br>')}</div>` : '';
+  out.innerHTML = warn + `
+    <div class="row"><b>Match ${v.overall_score}/100 — ${esc(v.grade)}</b>
+      <div class="vbar"><i style="width:${v.overall_score}%;background:${col}"></i></div>
+      <span class="sub">${v.axes_matched}/${v.axes_total} axes inside tolerance</span></div>
+    <table class="vtable"><tr><th>Axis</th><th class="d">Target</th><th class="d">Captured</th>
+      <th class="d">Diff</th><th>What to do</th></tr>
+      ${v.rows.map(x=>`<tr><td>${esc(x.label)}</td><td class="d">${x.target}</td>
+        <td class="d">${x.captured}</td>
+        <td class="d" style="color:${x.within?'var(--ok)':'var(--warn)'}">${x.diff>0?'+':''}${x.diff}</td>
+        <td class="sub">${x.within?'within tolerance':esc(x.fix)}</td></tr>`).join('')}
+    </table>
+    <div class="why">${esc(v.note)}</div>`;
+}
+
+function blockHtml(b, preset){
+  const off = (b.enabled === false) || b.model === '(off)';
+  const changed = (preset && (preset.user_influenced_blocks||[]).includes(b.module));
+  const rows = Object.entries(b.params||{}).map(([k,v]) =>
+    `<div class="kv"><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join('');
+  const tgt = b.target ? `<div class="why"><b>Target:</b> ` + Object.entries(b.target)
+      .filter(([,v]) => v !== null && v !== undefined)
+      .map(([k,v]) => esc(k.replace(/_/g,' ')) + ': ' + esc(v)).join(', ') + `</div>` : '';
+  return `<div class="blk${off?' off':''}${changed?' changed':''}"><h3>${esc(b.module)}</h3>
+    <div class="model">${esc(b.model||'-')}</div>
+    ${b.based_on?`<div class="sub">${esc(b.based_on)}</div>`:''}
+    ${rows}${tgt}<div class="why">${esc(b.why||'')}</div>
+    ${changed?'<div class="tag">you changed this</div>':''}</div>`;
+}
+
+function render(res){
+  const dur = res.duration_s;
+  let h = `<div class="card"><div class="row" style="justify-content:space-between">
+    <div><b>${esc(res.source)}</b><div class="sub">${dur}s · ${res.tempo_bpm} BPM ·
+    ${res.tones.length} distinct guitar tone(s) · stems: ${esc(res.separation.method)}
+    · analysed in ${res.elapsed_s}s</div></div>
+    <div class="row">
+      <a class="badge" href="/api/job/${jobId}/download/report">HTML sheet</a>
+      <a class="badge" href="/api/job/${jobId}/download/sheet">Dial-in text</a>
+      <a class="badge" href="/api/job/${jobId}/download/presets">presets.json</a>
+      <a class="badge" href="/api/job/${jobId}/download/raw">raw measurements</a>
+    </div></div>`;
+  if(res.separation.confidence < 0.5)
+    h += `<div class="warnbox" style="margin-top:14px">Guitar was not separated with a
+      dedicated model, so these tone estimates carry bleed from the rest of the mix.
+      Install Demucs for a real guitar stem.</div>`;
+  h += `</div>`;
+
+  for(const t of res.tones){
+    const p = t.preset, c = p.confidence.overall, id = t.tone_id;
+    const marks = t.sections.map(s =>
+      `<i style="left:${100*s.start/dur}%;width:${Math.max(0.4,100*(s.end-s.start)/dur)}%"></i>`).join('');
+    h += `<div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div><b style="font-size:16px">Tone ${id} · ${esc(t.name)}</b>
+          <div class="sub">${t.total_seconds.toFixed(0)}s of guitar (${t.share_pct}%) · ${esc(t.role)}</div></div>
+        <div class="row"><span class="badge">confidence</span>
+          <div class="confbar"><i style="width:${c*100}%;background:${confColor(c)}"></i></div>
+          <span class="mono">${c.toFixed(2)}</span></div>
+      </div>
+      <div class="tl">${marks}</div>
+      <div class="tonegrid">
+        <div>
+          <div class="radarbox">${radarSvg(id)}
+            <div class="legend">
+              <span><i style="border-color:var(--hot)"></i>your setting</span>
+              <span><i style="border-color:#6b7280;border-top-style:dashed"></i>as analysed</span>
+              <span><i style="border-color:var(--ok);border-top-style:dashed"></i>captured</span>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            ${AXES.map(a=>`<div class="axrow"><b title="${esc(a.hint)} — from ${esc(a.from)}">${esc(a.label)}</b>
+              <input type="range" min="0" max="100" id="sl-${id}-${a.id}" aria-label="${esc(a.label)}">
+              <span id="nv-${id}-${a.id}">0</span></div>`).join('')}
+          </div>
+          <div class="row" style="margin-top:8px">
+            <button class="ghost" id="reset-${id}">Back to analysed</button>
+            <span class="sub" id="astat-${id}">matching the analysis exactly</span>
+          </div>
+          <div class="warnbox" id="conflict-${id}" style="display:none;margin-top:10px">
+            ${esc((CONFLICTS[0]||{}).note||'')}
+          </div>
+          <div class="sub" style="margin-top:10px">Recorded excerpt (${t.clip_range[0]}s – ${t.clip_range[1]}s)</div>
+          <audio controls preload="none" src="/api/job/${jobId}/clip/${encodeURIComponent(t.clip)}"></audio>
+        </div>
+        <div>
+          <div class="chain" id="chain-${id}">${p.chain.map(b=>blockHtml(b,p)).join('')}</div>
+          <div class="why" style="margin-top:10px">Runner-up amps: ${p.amp_alternatives.map(a=>esc(a.model+' ('+a.ref+')')).join(', ')}</div>
+          <div class="vpanel">
+            <b style="font-size:13px">Validate against the pedal</b>
+            <div class="why">Dial this preset in, reamp the excerpt through the MG-300 over USB
+              (or play along), record the output, and drop the file here. It is measured the
+              same way the song was, and the difference comes back as numbers and instructions.</div>
+            <input type="file" accept="audio/*" style="margin-top:8px;font-size:12px"
+                   onchange="runValidate(${id}, this)"/>
+            <div id="vout-${id}" style="margin-top:10px"></div>
+          </div>
+          <details style="margin-top:12px"><summary>Measurements behind these choices</summary>
+            <table>${Object.entries(p.measurements).map(([k,v]) =>
+              `<tr><th>${esc(k)}</th><td class="mono">${esc(JSON.stringify(v))}</td></tr>`).join('')}</table>
+          </details>
+        </div>
+      </div></div>`;
+  }
+  $('#results').innerHTML = h;
+  setEmpty();
+
+  for(const t of res.tones){
+    const id = t.tone_id;
+    fetch(`/api/job/${jobId}/tone/${id}/adjust`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:'{"axes":{}}'
+    }).then(r=>r.json()).then(d=>{
+      TONE[id] = {base: d.baseline_axes, cur: {...d.baseline_axes}, preset: d.preset};
+      drawRadar(id); bindRadar(id);
+    });
+  }
+}
+
+// Runs last so the helpers it uses are already initialised.
+loadHistory();
+setEmpty();
+</script>
+</body></html>

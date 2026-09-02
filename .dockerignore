@@ -1,0 +1,17 @@
+.venv
+.git
+.gitignore
+__pycache__
+*.pyc
+*.bak
+data
+jobs
+samples/reference_presets/*
+!samples/reference_presets/.gitkeep
+docs/*.pdf
+.env
+*.wav
+*.mp3
+*.flac
+*.m4a
+README.md

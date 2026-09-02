@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sign in · Tone Chaser</title>
+<style>
+/* Tone Chaser - sign in. Same brass-on-charcoal language as the app. */
+:root{
+  --bg:#0a0a0c;--panel:#111116;--panel-2:#0c0c10;--line:#212127;--line-soft:#191920;
+  --ink:#edeae5;--dim:#8b8b96;--faint:#5a5a64;
+  --hot:#d8a25c;--hot-2:#eabe83;--hot-line:rgba(216,162,92,.34);
+  --ok:#7cc79b;--bad:#e0796e;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);min-height:100dvh;
+  display:flex;align-items:center;justify-content:center;padding:32px 20px;
+  font:14.5px/1.6 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+}
+/* Six strings, faint, running the full width behind everything. */
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+  background:
+    linear-gradient(#26262e,#26262e) 0 22vh/100% 2.2px,
+    linear-gradient(#242429,#242429) 0 34vh/100% 1.7px,
+    linear-gradient(#212127,#212127) 0 46vh/100% 1.3px,
+    linear-gradient(#1e1e24,#1e1e24) 0 58vh/100% 1px,
+    linear-gradient(#1c1c22,#1c1c22) 0 70vh/100% .8px,
+    linear-gradient(#1a1a20,#1a1a20) 0 82vh/100% .6px;
+  background-repeat:no-repeat;
+  -webkit-mask-image:radial-gradient(120% 70% at 50% 50%,transparent 30%,#000 100%);
+  mask-image:radial-gradient(120% 70% at 50% 50%,transparent 30%,#000 100%);
+}
+a{color:var(--hot);text-decoration:none}
+a:hover{color:var(--hot-2)}
+:focus-visible{outline:2px solid var(--hot);outline-offset:2px;border-radius:4px}
+.box{width:100%;max-width:392px;position:relative;z-index:1}
+.head{display:flex;flex-direction:column;align-items:center;gap:13px;text-align:center}
+.mark{width:30px;height:30px;color:var(--hot)}
+h1{font-size:20px;margin:0;font-weight:560;letter-spacing:-.02em}
+h1 em{font-style:normal;color:var(--hot)}
+.sub{color:var(--dim);font-size:13px;margin-top:-4px}
+.card{
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  border:1px solid var(--line);border-radius:16px;padding:26px;margin-top:24px;
+  box-shadow:0 1px 2px rgba(0,0,0,.4),0 16px 40px -20px rgba(0,0,0,.8);
+}
+label{display:block;font-size:11px;color:var(--faint);margin:16px 0 7px;
+letter-spacing:.09em;text-transform:uppercase;font-weight:500}
+label:first-of-type{margin-top:0}
+label b{font-weight:500;color:var(--faint);text-transform:none;letter-spacing:0;font-size:11px}
+input[type=email],input[type=password],input[type=text]{
+  width:100%;padding:11px 13px;background:var(--panel-2);border:1px solid var(--line);
+  border-radius:9px;color:var(--ink);font:inherit;font-size:13.5px;transition:border-color .15s;
+}
+input::placeholder{color:var(--faint)}
+input:focus{outline:none;border-color:var(--hot-line)}
+button[type=submit]{
+  width:100%;margin-top:20px;padding:12px 16px;border:0;border-radius:9px;
+  background:linear-gradient(180deg,var(--hot-2),var(--hot));color:#1a1207;
+  font:600 13.5px/1 inherit;cursor:pointer;transition:filter .15s,transform .08s;
+}
+button[type=submit]:hover{filter:brightness(1.07)}
+button[type=submit]:active{transform:translateY(1px)}
+.gbtn{
+  display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+  padding:11px 16px;border:1px solid var(--line);border-radius:9px;
+  background:#f7f7f8;color:#2b2b30;font:600 13.5px/1 inherit;cursor:pointer;
+  text-decoration:none;transition:background .15s;
+}
+.gbtn:hover{background:#fff;color:#2b2b30}
+.or{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--faint);
+font-size:10.5px;letter-spacing:.12em;text-transform:uppercase}
+.or:before,.or:after{content:"";height:1px;background:var(--line);flex:1}
+.msg{padding:11px 13px;border-radius:9px;font-size:12.5px;margin-bottom:18px;line-height:1.5}
+.err{background:rgba(224,121,110,.09);border:1px solid rgba(224,121,110,.3);color:#f0b4ad}
+.note{background:rgba(124,199,155,.09);border:1px solid rgba(124,199,155,.28);color:#a9dcc0}
+.swap{margin-top:18px;text-align:center;font-size:12.5px;color:var(--dim)}
+.swap a{cursor:pointer;border-bottom:1px solid var(--hot-line)}
+.foot{margin-top:20px;text-align:center;color:var(--faint);font-size:11.5px;line-height:1.6}
+[hidden]{display:none!important}
+@media(max-width:420px){.card{padding:22px}}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="head">
+    <svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="2.5" y="2.6" width="2.1" height="18.8" rx="1.05" fill="currentColor"/>
+      <g stroke="currentColor" stroke-linecap="round">
+        <line x1="6" y1="5.4"  x2="22" y2="5.4"  stroke-width="1.7"/>
+        <line x1="6" y1="8.3"  x2="22" y2="8.3"  stroke-width="1.4"/>
+        <line x1="6" y1="11.2" x2="22" y2="11.2" stroke-width="1.1"/>
+        <line x1="6" y1="14.1" x2="22" y2="14.1" stroke-width=".85"/>
+        <line x1="6" y1="17"   x2="22" y2="17"   stroke-width=".62"/>
+        <line x1="6" y1="19.9" x2="22" y2="19.9" stroke-width=".45"/>
+      </g>
+    </svg>
+    <h1>Tone <em>Chaser</em></h1>
+    <div class="sub">Sign in to analyse songs and keep your MG-300 MKII presets.</div>
+  </div>
+
+  <div class="card">
+    <div id="err" class="msg err" hidden></div>
+    <div id="note" class="msg note" hidden></div>
+
+    <a id="gbtn" class="gbtn" href="/auth/google" hidden>
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+        <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.91c1.7-1.57 2.69-3.88 2.69-6.62z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.26c-.81.54-1.84.86-3.05.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.34A8.99 8.99 0 0 0 9 18z"/>
+        <path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.94H.96a9 9 0 0 0 0 8.12l3.01-2.34z"/>
+        <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A8.99 8.99 0 0 0 .96 4.94l3.01 2.34C4.68 5.16 6.66 3.58 9 3.58z"/>
+      </svg>
+      <span id="glabel">Continue with Google</span>
+    </a>
+    <div id="or" class="or" hidden>or</div>
+
+    <!-- sign in -->
+    <form id="signin" method="post" action="/auth/login" hidden>
+      <label for="si-email">Email</label>
+      <input id="si-email" name="email" type="email" autocomplete="username" required/>
+      <label for="si-pw">Password</label>
+      <input id="si-pw" name="password" type="password" autocomplete="current-password" required/>
+      <button type="submit">Sign in</button>
+    </form>
+
+    <!-- sign up -->
+    <form id="signup" method="post" action="/auth/register" hidden>
+      <label for="su-name">Name <b>(optional)</b></label>
+      <input id="su-name" name="name" type="text" autocomplete="name"/>
+      <label for="su-email">Email</label>
+      <input id="su-email" name="email" type="email" autocomplete="username" required/>
+      <label for="su-pw">Password <b>(8+ characters)</b></label>
+      <input id="su-pw" name="password" type="password" autocomplete="new-password"
+             minlength="8" required/>
+      <button type="submit">Create account</button>
+    </form>
+
+    <div class="swap" id="swap" hidden></div>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+const GOOGLE = "{{GOOGLE}}" === "1";
+const ALLOW_REG = "{{ALLOW_REGISTRATION}}" === "1";
+let mode = "{{MODE}}" === "signup" ? "signup" : "signin";
+
+// Server-rendered messages, plus ?error= / ?notice= on the URL.
+const q = new URLSearchParams(location.search);
+const errText  = ({{ERROR_JSON}}) || q.get("error")  || "";
+const noteText = ({{NOTICE_JSON}}) || q.get("notice") || "";
+if (errText)  { const e = document.getElementById("err");  e.textContent = errText;  e.hidden = false; }
+if (noteText) { const n = document.getElementById("note"); n.textContent = noteText; n.hidden = false; }
+
+document.getElementById("gbtn").hidden = !GOOGLE;
+document.getElementById("or").hidden   = !GOOGLE;
+
+function render(){
+  document.getElementById("signin").hidden = mode !== "signin";
+  document.getElementById("signup").hidden = mode !== "signup";
+  document.getElementById("glabel").textContent =
+    mode === "signup" ? "Sign up with Google" : "Continue with Google";
+  const swap = document.getElementById("swap");
+  if (!ALLOW_REG) {
+    swap.hidden = true;
+  } else {
+    swap.hidden = false;
+    swap.innerHTML = mode === "signin"
+      ? 'No account yet? <a id="to-signup">Create one</a>'
+      : 'Already have an account? <a id="to-signin">Sign in</a>';
+    const a = swap.querySelector("a");
+    a.onclick = () => { mode = (mode === "signin" ? "signup" : "signin"); render(); };
+  }
+  const foot = document.getElementById("foot");
+  foot.textContent = GOOGLE
+    ? "Runs on your own machine. Audio you upload is never sent anywhere else."
+    : "Google sign-in is not configured on this server - set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable it.";
+}
+render();
+</script>
+</body>
+</html>

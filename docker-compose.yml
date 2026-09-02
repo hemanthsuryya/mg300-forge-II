@@ -1,0 +1,62 @@
+# Tone Chaser - app + Postgres
+#
+#   cp .env.example .env      # then edit it (SESSION_SECRET is required)
+#   docker compose up -d --build
+#   open http://127.0.0.1:8000
+#
+# The first analysis downloads the Demucs model weights (~250 MB) into the
+# model-cache volume. That happens once, not per container start.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:-tonechaser}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-tonechaser}"
+      POSTGRES_DB: "${POSTGRES_DB:-tonechaser}"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tonechaser} -d ${POSTGRES_DB:-tonechaser}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    # Not published by default: nothing outside the compose network needs it.
+    expose:
+      - "5432"
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql+psycopg://${POSTGRES_USER:-tonechaser}:${POSTGRES_PASSWORD:-tonechaser}@db:5432/${POSTGRES_DB:-tonechaser}"
+      # Fails the run with a clear message rather than booting with a random
+      # secret that would log everyone out on the next restart.
+      SESSION_SECRET: "${SESSION_SECRET:?SESSION_SECRET is unset - put one in .env (openssl rand -base64 32)}"
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+      GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"
+      BASE_URL: "${BASE_URL:-}"
+      COOKIE_SECURE: "${COOKIE_SECURE:-0}"
+      ALLOW_REGISTRATION: "${ALLOW_REGISTRATION:-1}"
+      JOBS_DIR: /data/jobs
+      DATA_DIR: /data
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      - job-data:/data          # uploads, stems, clips, reports
+      - model-cache:/cache      # Demucs weights, torch hub cache
+    # Separation is memory hungry; a full song through htdemucs_6s can want
+    # several GB. Raise these if analysis gets killed on long tracks.
+    deploy:
+      resources:
+        limits:
+          memory: ${APP_MEMORY_LIMIT:-8g}
+
+volumes:
+  db-data:
+  job-data:
+  model-cache:
