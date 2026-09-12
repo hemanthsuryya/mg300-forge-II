@@ -58,7 +58,7 @@ def _block_html(b):
 
 
 def render_html_report(result: dict) -> str:
-    parts = [f"<!doctype html><meta charset='utf-8'><title>Tone Chaser - MG-300 MKII presets - "
+    parts = [f"<!doctype html><meta charset='utf-8'><title>Tone Sear - MG-300 MKII presets - "
              f"{html.escape(result['source'])}</title><style>{CSS}</style><div class='wrap'>"]
     parts.append(f"<h1>MG-300 MKII preset sheet</h1><div class='sub'>"
                  f"{html.escape(result['source'])} &middot; {result['duration_s']}s &middot; "

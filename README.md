@@ -1,4 +1,14 @@
-# Tone Chaser
+---
+title: Tone Sear
+emoji: 🎸
+colorFrom: indigo
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
+# Tone Sear
 
 Drop in a song. It isolates the guitar, finds the sections where the guitar is
 playing, groups those sections by tone, records an excerpt of each one, measures
@@ -6,6 +16,8 @@ what that tone is actually doing, and writes a NUX MG-300 MKII preset recipe for
 each distinct tone.
 
 Runs entirely on your machine. Nothing is uploaded anywhere.
+
+![Tone Sear home page: drop a song or paste a link, pick how many tones to look for, and reopen past analyses below](docs/images/home.png)
 
 ---
 
@@ -171,20 +183,22 @@ part. The app would rather say nothing than guess.
 Every tone card carries a nine-axis radar. It starts where the analysis put it,
 and you drag it from there.
 
+![A tone card: where the tone appears in the song, the radar and sliders on the left, and each MG-300 MKII block with its settings and the reason for it on the right](docs/images/tone-card.png)
+
 | Axis | In plain terms | Measured from | Moves |
 |---|---|---|---|
-| **Grit** | raspiness, saturation | crest factor + spectral valley depth | AMP Gain, drive pedal choice |
-| **Body** | low-end weight | 80-250 Hz balance | AMP Bass, EQ lows, cab |
-| **Bite** | presence, attack edge | 1.6-8 kHz balance + centroid | AMP Treble/Presence, cab |
-| **Honk** | scooped to mid-forward | mid scoop in dB | AMP Middle, pedal voicing |
-| **Squash** | compression, sustain | crest factor + envelope spread | COMP |
-| **Space** | wet to dry | RT60 + late tail energy | RVB |
-| **Echo** | delay amount | repeat level + feedback | DLY |
-| **Swirl** | chorus, phaser, tremolo | modulation depth | MOD |
+| **Drive** | distortion, saturation | crest factor + spectral valley depth | AMP Gain, drive pedal choice |
+| **Low End** | bass weight | 80-250 Hz balance | AMP Bass, EQ lows, cab |
+| **Brightness** | presence, pick attack | 1.6-8 kHz balance + centroid | AMP Treble/Presence, cab |
+| **Mids** | scooped to mid-forward | mid scoop in dB | AMP Middle, pedal voicing |
+| **Compression** | sustain, evenness | crest factor + envelope spread | COMP |
+| **Reverb** | dry to wet | RT60 + late tail energy | RVB |
+| **Delay** | echo amount | repeat level + feedback | DLY |
+| **Modulation** | chorus, phaser, tremolo | modulation depth | MOD |
 | **Wah** | envelope filter | not measured - a taste control | EFX slot |
 
 **An axis does not turn a knob. It edits the measurement the knob came from, and
-the whole chain re-solves.** Pull Grit down on a metal tone and you don't just
+the whole chain re-solves.** Pull Drive down on a metal tone and you don't just
 get less gain - the amp becomes a Super Rvb, the drive pedal disappears, and the
 compressor switches on because the amp is no longer doing the squashing. Every
 block that moved gets outlined and tagged.
@@ -193,9 +207,9 @@ Consequences worth knowing:
 
 - Leave the radar alone and you get the analysed preset byte for byte. The axes
   apply *deltas*, so an untouched axis changes nothing. Tested.
-- The radar can never contradict the chain. Whether Space, Echo and Swirl read
+- The radar can never contradict the chain. Whether Reverb, Delay and Modulation read
   above zero is answered by asking the mapper, not by re-implementing its
-  thresholds - an earlier version showed Echo at 95 next to a DLY block that was
+  thresholds - an earlier version showed Delay at 95 next to a DLY block that was
   correctly switched off.
 - **Wah and the drive pedal are the same physical slot.** Raise Wah past 10 and
   the overdrive is displaced; the UI says so rather than quietly dropping it.
@@ -211,6 +225,8 @@ through the *same* measurement pipeline, and you get a per-axis difference, a
 match score, and an instruction per block - "Bass is 14 too low", not "sounds
 thin". The captured tone is drawn on the same radar in green, so the shape of the
 mismatch is visible at a glance.
+
+![The bottom of a tone card: the QuickTone preset download, the Validate panel for a capture from the pedal, and the raw measurements behind every choice](docs/images/validate.png)
 
 **[docs/VALIDATION.md](docs/VALIDATION.md)** has the wiring, and 16 test cases in
 three tiers: prove the loop is honest (null loop, level independence,
@@ -236,20 +252,29 @@ model.
 
 ---
 
-## The one thing this cannot do yet
+## QuickTone preset files
 
-Write a file QuickTone will import. NUX does not publish the preset format and
-QuickTone exports nothing readable. Guessing the byte layout would produce files
-that fail to import, or import as something that sounds nothing like the
-analysis — which is worse than no file at all.
+Each tone card has a **QuickTone preset file** button, which follows the radar if
+you have moved it. In QuickTone, click Import, pick the file and choose a slot —
+that slot is overwritten.
 
-**To unlock it:** export a few presets from QuickTone into
-`samples/reference_presets/`. Most useful is the *same* preset saved three times
-with one parameter changed — Gain at 0, then 50, then 100. Diffing those pins
-down where each field lives. `app/preset_format.py` is the stub waiting for it.
+The file sets the amp, cab, drive, compressor, modulation, delay and reverb
+models, which of those blocks are on, all six amp knobs and the reverb level.
+The other effect knobs, the EQ and the gate keep the template's values, so set
+those from the settings sheet.
 
-Until then the settings sheet contains every value needed to enter the preset by
-hand, which takes about a minute per preset in QuickTone.
+NUX does not publish the format. The layout in `app/preset_format.py` was worked
+out by exporting one preset from QuickTone with a single control changed per file
+and diffing the files. `tests/test_preset_format.py` checks that the encoder
+reproduces those exports byte for byte; the exports live in
+`samples/reference_presets/`, which is not committed, so those checks skip on a
+fresh clone. Every file starts from `app/catalog/mg300mk2_template.mg300MK2patch`,
+a genuine export, and only the bytes whose meaning is known are changed.
+
+Model names and menu numbers in `app/catalog/mg300mk2.json` follow QuickTone
+2.6.7's dropdowns. Six models on the pedal have no tonal profile yet — MLD,
+I DELUXE RVB, I CLASS A30, I FIREMAN, MODERN DIST and RED COMP — and are never
+picked automatically.
 
 ---
 

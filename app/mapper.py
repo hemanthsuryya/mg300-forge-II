@@ -20,6 +20,11 @@ import numpy as np
 CATALOG = json.loads((Path(__file__).parent / "catalog" / "mg300mk2.json").read_text())
 
 
+def entry(kind, model_id):
+    """Catalog entry by id. Decisions below use ids; names are what QuickTone shows."""
+    return next(e for e in CATALOG[kind] if e["id"] == model_id)
+
+
 def clamp(x, lo=0, hi=100):
     return int(round(float(np.clip(x, lo, hi))))
 
@@ -59,6 +64,8 @@ def choose_amp(m):
 
     scored = []
     for amp in CATALOG["amps"]:
+        if "gain_window" not in amp:        # on the pedal, but not profiled yet
+            continue
         if amp["family"] == "acoustic" and drive > 25:
             continue
         w0, w1 = amp["gain_window"]
@@ -114,7 +121,7 @@ def amp_block(m, amp, ctx):
 def efx_block(m, amp, ctx):
     wah = m.get("wah_amount", 0.0)
     if wah > 0.10:
-        p = next(e for e in CATALOG["efx"] if e["id"] == "touch_wah")
+        p = entry("efx", "touch_wah")
         return {"module": "EFX", "model": p["name"], "enabled": True,
                 "params": {"Type": 50, "Wow": clamp(25 + 70 * wah),
                            "Sense": clamp(30 + 60 * wah)},
@@ -130,7 +137,7 @@ def efx_block(m, amp, ctx):
     if headroom_short <= 2 and drive < 55:
         # Amp alone covers it. Offer a boost only for lead roles.
         if m.get("role") == "lead" and drive > 25:
-            p = next(e for e in CATALOG["efx"] if e["id"] == "katana_boost")
+            p = entry("efx", "katana_boost")
             return {"module": "EFX", "model": p["name"], "enabled": True,
                     "params": {"Volume": 62, "Boost": 40},
                     "why": "Lead section: clean level lift into the amp, no extra dirt."}
@@ -139,9 +146,9 @@ def efx_block(m, amp, ctx):
 
     need = max(headroom_short, 0) + (10 if drive > 70 else 0)
     if scoop <= -4.0:
-        family = ["muff_fuzz", "eat_dist", "dist_one"]
+        family = ["muff_fuzz", "dist_one"]
     elif scoop >= 2.5:
-        family = ["t_scream", "red_dirt", "st_singer"]
+        family = ["t_scream", "red_dirt"]
     else:
         family = ["crunch", "blues_dry", "dist_one", "rc_boost"]
     pool = [e for e in CATALOG["efx"] if e["id"] in family]
@@ -152,7 +159,7 @@ def efx_block(m, amp, ctx):
     params = {}
     for p in pick["params"]:
         pl = p.lower()
-        if "gain" in pl or "sustain" in pl or "fuzz" in pl or "sensitivity" in pl:
+        if "gain" in pl or "drive" in pl or "sustain" in pl or "fuzz" in pl or "sensitivity" in pl:
             params[p] = gain_knob
         elif "tone" in pl or "filter" in pl or "treble" in pl:
             params[p] = tone_knob
@@ -171,7 +178,6 @@ def efx_block(m, amp, ctx):
 def comp_block(m):
     crest = m["dyn"]["crest_db"]
     spread = m["dyn"]["env_spread_db"]
-    sharp = m["dyn"]["attack_sharpness"]
     drive = m["drive"]
 
     # Heavy distortion compresses on its own - don't double up.
@@ -183,15 +189,10 @@ def comp_block(m):
                 "why": f"Dynamics are open (crest {crest:.1f} dB) - no compression audible."}
 
     squash = float(np.clip((14.0 - crest) / 7.0, 0, 1))
-    if sharp > 6.5 and drive < 0.25:
-        model, params = "K Comp", {"Level": 55, "Sustain": clamp(30 + 55 * squash),
-                                   "Clipping": clamp(20 + 30 * squash)}
-    elif squash > 0.65:
-        model, params = "Rose Comp", {"Level": 55, "Sustain": clamp(35 + 55 * squash)}
-    else:
-        model, params = "Studio Comp", {"Level": 55, "Threshold": clamp(70 - 40 * squash),
-                                        "Ratio": clamp(25 + 45 * squash), "Release": 45}
-    return {"module": "COMP", "model": model, "enabled": True, "params": params,
+    # ROSE COMP is the one compressor on this unit whose controls are confirmed.
+    params = {"Level": 55, "Sustain": clamp(30 + 60 * squash)}
+    return {"module": "COMP", "model": entry("comps", "rose_comp")["name"],
+            "enabled": True, "params": params,
             "why": f"Crest factor {crest:.1f} dB and {spread:.1f} dB envelope spread "
                    f"indicate {'strong' if squash > 0.6 else 'light'} compression."}
 
@@ -232,7 +233,7 @@ def mod_block(m):
     off = {"module": "MOD", "model": "(off)", "enabled": False, "params": {},
            "why": "No periodic amplitude, pitch or filter movement above what "
                   "ordinary playing produces. If you can hear movement on the "
-                  "record, raise Swirl.",
+                  "record, raise Modulation.",
            "confidence": 0.55}
     wide = (st.get("side_ratio") or 0) > 0.25
 
@@ -240,7 +241,7 @@ def mod_block(m):
     #    is the one modulation type that is measured reliably.
     if (am_p > 8.0 * strict and am_d > 0.15 and am_h < 0.55
             and (cm_p < 3.0 or am_d > 2 * cm_d)):
-        return {"module": "MOD", "model": "Tremolo", "enabled": True,
+        return {"module": "MOD", "model": entry("mods", "tremolo")["name"], "enabled": True,
                 "params": {"Rate": rate_to_knob(am_r), "Depth": clamp(am_d * 110)},
                 "target": {"rate_hz": round(am_r, 2), "depth_pct": clamp(am_d * 110)},
                 "why": f"Loudness modulates as a clean sine at {am_r:.2f} Hz, "
@@ -254,14 +255,14 @@ def mod_block(m):
     #    the confidence says so - the Swirl axis is there to overrule it.
     if pm_c > 18.0 * strict and cm_d > 0.07 and pm_r:
         if pm_c > 45:
-            return {"module": "MOD", "model": "Vibrator", "enabled": True,
+            return {"module": "MOD", "model": entry("mods", "vibrator")["name"], "enabled": True,
                     "params": {"Rate": rate_to_knob(pm_r), "Depth": clamp(pm_c * 1.6),
                                "Rise Time": 40},
                     "target": {"rate_hz": round(pm_r, 2), "depth_cents": round(pm_c, 1)},
                     "why": f"Deep pitch modulation, {pm_c:.0f} cents at {pm_r:.2f} Hz - "
                            f"too deep for chorus.",
                     "confidence": 0.45}
-        model = "St. Chorus" if wide else "CE-2"
+        model = entry("mods", "st_chorus" if wide else "ce_2")["name"]
         params = ({"Rate": rate_to_knob(pm_r), "Width": clamp(20 + pm_c * 1.8),
                    "Intensity": 55} if wide else
                   {"Rate": rate_to_knob(pm_r), "Depth": clamp(20 + pm_c * 1.8)})
@@ -271,7 +272,7 @@ def mod_block(m):
                        + (" and the image is wide - stereo chorus."
                           if wide else " - chorus.")
                        + " Chorus is the least certain call in this app; if the "
-                         "record sounds dry, pull Swirl to zero.",
+                         "record sounds dry, pull Modulation to zero.",
                 "confidence": 0.4}
 
     # 3. Filter movement with no pitch shift -> phaser, or flanger if the comb
@@ -279,7 +280,7 @@ def mod_block(m):
     if cm_d > 0.105 * strict and pm_c < 8.0:
         if (comb > 3.0 * strict and sweep_p > 4.0 and sweep_r
                 and comb_ms is not None and comb_ms < 6.0):
-            return {"module": "MOD", "model": "Flanger", "enabled": True,
+            return {"module": "MOD", "model": entry("mods", "flanger")["name"], "enabled": True,
                     "params": {"Rate": rate_to_knob(sweep_r),
                                "Width": clamp(40 + 200 * cm_d),
                                "Feedback": clamp(35 + 25 * (comb - 3)), "Level": 60},
@@ -288,11 +289,11 @@ def mod_block(m):
                            f"{sweep_r:.2f} Hz - a static harmonic series would not move.",
                     "confidence": 0.45}
         rate = cm_r or 1.0
-        model = "Phase 100" if cm_d > 0.16 else "Phase 90"
+        ph = entry("mods", "phase_100" if cm_d > 0.16 else "phase_90")
         params = {"Speed": rate_to_knob(rate)}
-        if model == "Phase 100":
+        if ph["id"] == "phase_100":
             params["Intensity"] = clamp(35 + 220 * cm_d)
-        return {"module": "MOD", "model": model, "enabled": True, "params": params,
+        return {"module": "MOD", "model": ph["name"], "enabled": True, "params": params,
                 "target": {"rate_hz": round(rate, 2)},
                 "why": f"The spectral centre sweeps {cm_d*100:.0f}% at about "
                        f"{rate:.2f} Hz with no pitch shift. The measured rate can land "
@@ -302,7 +303,7 @@ def mod_block(m):
 
     # 4. Wide and static with no sweep: doubling rather than an LFO effect.
     if (st.get("side_ratio") or 0) > 0.45 and comb > 2.0:
-        return {"module": "MOD", "model": "Detune", "enabled": True,
+        return {"module": "MOD", "model": entry("mods", "detune")["name"], "enabled": True,
                 "params": {"Shift-L": 45, "Shift-R": 55, "Mix": 45},
                 "why": "Very wide, non-periodic stereo image - doubling or detune "
                        "rather than a swept effect.",
@@ -331,26 +332,23 @@ def delay_block(m):
     stereo_wide = (m["mod"]["stereo"].get("side_ratio") or 0) > 0.35
 
     if ms < 140 and d["feedback"] < 0.35:
-        model = "Tape Echo"; why_extra = "short slapback"
+        dly, why_extra = entry("delays", "tape_echo"), "short slapback"
     elif stereo_wide:
-        model = "Pan Delay"; why_extra = "repeats spread across the stereo field"
+        dly, why_extra = entry("delays", "pan_delay"), "repeats spread across the stereo field"
     elif dark > 2.0:
-        model = "Analog Delay"; why_extra = "repeats are darker than the dry signal"
+        dly, why_extra = entry("delays", "analog_delay"), "repeats are darker than the dry signal"
     elif m["mod"]["comb_strength"] > 2.8:
-        model = "Mod Delay"; why_extra = "repeats carry modulation"
+        dly, why_extra = entry("delays", "mod_delay"), "repeats carry modulation"
     else:
-        model = "Digital Delay"; why_extra = "repeats keep the dry signal's brightness"
+        dly, why_extra = entry("delays", "digi_delay"), "repeats keep the dry signal's brightness"
 
     time_knob = clamp(100 * ms / 1000.0)
     fb = clamp(d["feedback"] * 110)
     lvl = clamp(25 + 55 * d["confidence"])
-    names = {e["id"]: e for e in CATALOG["delays"]}
-    key = {"Tape Echo": "tape_echo", "Pan Delay": "pan_delay", "Analog Delay": "analog_delay",
-           "Mod Delay": "mod_delay", "Digital Delay": "digi_delay"}[model]
     params = {}
-    for p in names[key]["params"]:
+    for p in dly["params"]:
         pl = p.lower()
-        if "time" in pl or pl == "rate":
+        if "time" in pl or "rate" in pl:
             params[p] = time_knob
         elif "back" in pl or "intensity" in pl:
             params[p] = fb
@@ -359,7 +357,7 @@ def delay_block(m):
         else:
             params[p] = lvl
     div = f" ({d['division']} at {m.get('tempo_bpm', 0):.0f} BPM)" if d["division"] else ""
-    return {"module": "DLY", "model": model, "enabled": True, "params": params,
+    return {"module": "DLY", "model": dly["name"], "enabled": True, "params": params,
             "target": {"time_ms": round(ms), "feedback_pct": round(d["feedback"] * 100),
                        "division": d["division"]},
             "why": f"Repeats every {ms:.0f} ms{div}; {why_extra}.",
@@ -379,21 +377,22 @@ def reverb_block(m):
     hf = rv["rt60_hf_s"] or rt
     damping = rt / max(hf, 1e-3)         # >1.3 means the highs die first
     if rt < 0.9:
-        model = "Room"
+        rvb = entry("reverbs", "room")
     elif rt < 1.9 and damping < 1.35 and m["drive"] < 0.45:
-        model = "Spring"
+        rvb = entry("reverbs", "spring")
     elif rt < 2.3:
-        model = "Plate"
+        rvb = entry("reverbs", "plate")
     elif rt < 4.0:
-        model = "Hall"
+        rvb = entry("reverbs", "hall")
     else:
-        model = "Shimmer"
+        rvb = entry("reverbs", "shimmer")
 
-    lo, hi = next(r for r in CATALOG["reverbs"] if r["name"] == model)["typical_rt60"]
+    model = rvb["name"]
+    lo, hi = rvb["typical_rt60"]
     decay = clamp(100 * (rt - lo) / max(hi - lo, 0.1), 10, 95)
     level = clamp(18 + 160 * rv["late_energy_ratio"], 8, 85)
-    params = {"Decay": decay, "Pre Delay": clamp(20 + 30 * min(rt, 2) / 2), "Level": level}
-    if model == "Shimmer":
+    params = {"Decay": decay, "Predelay": clamp(20 + 30 * min(rt, 2) / 2), "Level": level}
+    if rvb["id"] == "shimmer":
         params["Mix"] = level
     return {"module": "RVB", "model": model, "enabled": True, "params": params,
             "target": {"rt60_s": round(rt, 2), "hf_damping": round(damping, 2)},
@@ -429,7 +428,7 @@ def eq_block(m, amp_blk):
     if max(abs(v) for v in residual.values()) < 2.0:
         return {"module": "EQ", "model": "(off)", "enabled": False, "params": {},
                 "why": "The amp tone stack already lands on the measured curve."}
-    return {"module": "EQ", "model": "6-Band EQ", "enabled": True,
+    return {"module": "EQ", "model": entry("eqs", "6band")["name"], "enabled": True,
             "params": {k: f"{v:+.1f} dB" for k, v in residual.items()},
             "why": "Residual correction the amp's four knobs can't reach."}
 
@@ -439,11 +438,11 @@ def gate_block(m):
     play = m["dyn"]["rms_db"]
     margin = play - nf
     if m["drive"] < 0.35 and margin > 45:
-        return {"module": "NG", "model": "Noise Gate", "enabled": False, "params": {},
+        return {"module": "NG", "model": CATALOG["noise_gate"]["name"], "enabled": False, "params": {},
                 "why": "Clean tone with a low noise floor - gate not needed."}
     thr = clamp(25 + (60 - min(margin, 60)) * 1.1, 15, 85)
-    return {"module": "NG", "model": "Noise Gate", "enabled": True,
-            "params": {"Threshold": thr, "Decay": clamp(40 + 30 * m["drive"])},
+    return {"module": "NG", "model": CATALOG["noise_gate"]["name"], "enabled": True,
+            "params": {"Sens": thr, "Decay": clamp(40 + 30 * m["drive"])},
             "why": f"{'High gain' if m['drive'] > 0.5 else 'Moderate gain'} with "
                    f"{margin:.0f} dB between playing level and noise floor."}
 
@@ -452,10 +451,10 @@ def ir_block(amp, m):
     cab = amp["default_cab"]
     bright = brightness_from_centroid(m["shape"]["centroid_hz"])
     note = ""
-    if bright > 0.8 and cab in ("V412", "1960"):
-        cab, note = "GB412", " (brighter cab chosen - the section is very top-heavy)"
-    elif bright < 0.3 and cab in ("A212", "JZ120"):
-        cab, note = "DR112", " (darker cab chosen - the section is very warm)"
+    if bright > 0.8 and cab in ("V30 412", "T75 412"):
+        cab, note = "GREEN 412", " (brighter cab chosen - the section is very top-heavy)"
+    elif bright < 0.3 and cab in ("BLUE 212", "BLUE 112", "JAZZ 212"):
+        cab, note = "BLACK 112", " (darker cab chosen - the section is very warm)"
     return {"module": "IR", "model": cab, "enabled": True, "params": {"Level": 60},
             "why": f"Standard pairing for {amp['name']}{note}."}
 
@@ -486,8 +485,10 @@ def build_preset(m, name="Preset"):
         m.get("separation_confidence", 0.5),
     ]))
     moved = m.get("user_moved_axes") or []
-    AXIS_BLOCKS = {"grit": ("AMP", "EFX"), "body": ("AMP", "EQ"), "bite": ("AMP", "EQ", "IR"),
-                   "honk": ("AMP", "EQ", "EFX"), "squash": ("COMP",), "space": ("RVB",),
+    # IR follows the amp: every axis that can change the amp can change its cab.
+    AXIS_BLOCKS = {"grit": ("AMP", "EFX", "IR"), "body": ("AMP", "EQ", "IR"),
+                   "bite": ("AMP", "EQ", "IR"), "honk": ("AMP", "EQ", "EFX", "IR"),
+                   "squash": ("COMP",), "space": ("RVB",),
                    "echo": ("DLY",), "swirl": ("MOD",), "wah": ("EFX",)}
     touched = sorted({b for ax in moved for b in AXIS_BLOCKS.get(ax, ())})
     for blk in blocks.values():

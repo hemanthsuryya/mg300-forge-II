@@ -1,107 +1,1181 @@
 {
   "device": "NUX MG-300 MKII",
-  "catalog_version": "2026.08.19",
-  "note": "Model names follow NUX's MG-series naming. Verify against your firmware's model list and edit this file if a name differs - the mapper reads it at runtime, nothing is hard-coded.",
-  "chain_order": ["NG", "COMP", "EFX", "AMP", "IR", "EQ", "MOD", "DLY", "RVB"],
-  "knob_range": [0, 100],
-
+  "catalog_version": "2026.09.12",
+  "note": "Model names, order and menu_index follow QuickTone 2.6.7's dropdowns for the MG-300 MKII. menu_index is the number QuickTone shows next to a model, and the value written into .mg300MK2patch files. Entries with a 'note' instead of a tonal profile are never picked automatically.",
+  "chain_order": [
+    "NG",
+    "COMP",
+    "EFX",
+    "AMP",
+    "IR",
+    "EQ",
+    "MOD",
+    "DLY",
+    "RVB"
+  ],
+  "knob_range": [
+    0,
+    100
+  ],
   "amps": [
-    {"id": "jazz_clean",  "name": "Jazz Clean",   "ref": "Roland JC-120",        "family": "clean",       "gain_window": [0, 22], "voice": "bright, glassy, tight low end, near-zero breakup", "brightness": 0.78, "mid_shape": "flat",   "low_weight": 0.42, "default_cab": "JZ120"},
-    {"id": "deluxe_rvb",  "name": "Deluxe Rvb",   "ref": "Fender Deluxe Reverb", "family": "clean",       "gain_window": [0, 40], "voice": "warm American clean with soft edge-of-breakup", "brightness": 0.60, "mid_shape": "scoop_soft", "low_weight": 0.52, "default_cab": "DR112"},
-    {"id": "twin_rvb",    "name": "Twin Rvb",     "ref": "Fender Twin Reverb",   "family": "clean",       "gain_window": [0, 30], "voice": "loud, scooped, sparkling clean headroom",       "brightness": 0.72, "mid_shape": "scoop",  "low_weight": 0.55, "default_cab": "TR212"},
-    {"id": "tweedy",      "name": "Tweedy",       "ref": "Fender Tweed Deluxe",  "family": "crunch",      "gain_window": [25, 65],"voice": "loose, midrange-forward vintage grind",         "brightness": 0.48, "mid_shape": "push",   "low_weight": 0.58, "default_cab": "DR112"},
-    {"id": "bass_mate",   "name": "Bass Mate",    "ref": "Fender Bassman",       "family": "crunch",      "gain_window": [20, 60],"voice": "thick tweed-style breakup, strong lows",        "brightness": 0.50, "mid_shape": "push",   "low_weight": 0.68, "default_cab": "BS410"},
-    {"id": "class_a15",   "name": "Class A 15",   "ref": "Vox AC15",             "family": "crunch",      "gain_window": [20, 60],"voice": "chimey British breakup, upper-mid bite",        "brightness": 0.74, "mid_shape": "push",   "low_weight": 0.40, "default_cab": "A212"},
-    {"id": "class_a30",   "name": "Class A 30",   "ref": "Vox AC30",             "family": "crunch",      "gain_window": [25, 70],"voice": "jangly chime with top-end sizzle when pushed",  "brightness": 0.80, "mid_shape": "push",   "low_weight": 0.42, "default_cab": "A212"},
-    {"id": "brit_blues",  "name": "Brit Blues",   "ref": "Marshall Bluesbreaker","family": "crunch",      "gain_window": [30, 70],"voice": "singing British blues crunch",                  "brightness": 0.58, "mid_shape": "push",   "low_weight": 0.55, "default_cab": "1960"},
-    {"id": "plexi_45",    "name": "Plexi 45",     "ref": "Marshall JTM45",       "family": "crunch",      "gain_window": [30, 72],"voice": "vintage plexi grind, woody mids",               "brightness": 0.56, "mid_shape": "push",   "low_weight": 0.56, "default_cab": "1960"},
-    {"id": "plexi_100",   "name": "Plexi 100W",   "ref": "Marshall Super Lead",  "family": "crunch",      "gain_window": [35, 78],"voice": "classic rock roar, aggressive upper mids",      "brightness": 0.64, "mid_shape": "push",   "low_weight": 0.54, "default_cab": "1960"},
-    {"id": "hiwire",      "name": "Hiwire",       "ref": "Hiwatt DR103",         "family": "crunch",      "gain_window": [15, 55],"voice": "clean, stiff, hi-fi British headroom",          "brightness": 0.66, "mid_shape": "flat",   "low_weight": 0.50, "default_cab": "GB412"},
-    {"id": "1987x50",     "name": "1987 X 50W",   "ref": "Marshall 1987x",       "family": "crunch",      "gain_window": [35, 75],"voice": "raw plexi bark",                                "brightness": 0.62, "mid_shape": "push",   "low_weight": 0.52, "default_cab": "1960"},
-    {"id": "brit_800",    "name": "Brit 800",     "ref": "Marshall JCM800",      "family": "hi_gain",     "gain_window": [45, 88],"voice": "tight British high gain, cutting mids",         "brightness": 0.66, "mid_shape": "push",   "low_weight": 0.50, "default_cab": "1960"},
-    {"id": "brit_2000",   "name": "Brit 2000",    "ref": "Marshall JCM2000",     "family": "hi_gain",     "gain_window": [50, 92],"voice": "modern Marshall gain, firm and bright",         "brightness": 0.70, "mid_shape": "push",   "low_weight": 0.52, "default_cab": "GB412"},
-    {"id": "cali_crunch", "name": "Cali Crunch",  "ref": "Mesa/Boogie Mark I",   "family": "hi_gain",     "gain_window": [40, 85],"voice": "liquid mid-forward American lead",              "brightness": 0.58, "mid_shape": "push",   "low_weight": 0.55, "default_cab": "V412"},
-    {"id": "slo_100",     "name": "Slo 100",      "ref": "Soldano SLO-100",      "family": "hi_gain",     "gain_window": [55, 95],"voice": "smooth saturated lead sustain",                 "brightness": 0.62, "mid_shape": "push",   "low_weight": 0.55, "default_cab": "V412"},
-    {"id": "fireman_hbe", "name": "Fireman HBE",  "ref": "Friedman HBE",         "family": "hi_gain",     "gain_window": [55, 95],"voice": "hot-rodded Marshall, thick and aggressive",     "brightness": 0.64, "mid_shape": "push",   "low_weight": 0.58, "default_cab": "1960"},
-    {"id": "dual_rect",   "name": "Dual Rect",    "ref": "Mesa Dual Rectifier",  "family": "metal",       "gain_window": [60, 100],"voice": "scooped, chunky, huge low end",                "brightness": 0.56, "mid_shape": "scoop",  "low_weight": 0.78, "default_cab": "V412"},
-    {"id": "die_vh4",     "name": "Die VH4",      "ref": "Diezel VH4",           "family": "metal",       "gain_window": [60, 100],"voice": "tight modern German high gain",                "brightness": 0.60, "mid_shape": "flat",   "low_weight": 0.70, "default_cab": "V412"},
-    {"id": "uber",        "name": "Uber",         "ref": "Bogner Uberschall",    "family": "metal",       "gain_window": [65, 100],"voice": "brutal saturated djent-friendly gain",         "brightness": 0.58, "mid_shape": "scoop",  "low_weight": 0.80, "default_cab": "V412"},
-    {"id": "vivo",        "name": "Vivo",         "ref": "Peavey 5150",          "family": "metal",       "gain_window": [60, 100],"voice": "raw searing thrash gain, hard upper mids",     "brightness": 0.68, "mid_shape": "push",   "low_weight": 0.66, "default_cab": "V412"},
-    {"id": "mr_z38",      "name": "Mr Z 38",      "ref": "Dr. Z Maz 38",         "family": "crunch",      "gain_window": [25, 65],"voice": "boutique chime with tight bottom",              "brightness": 0.70, "mid_shape": "push",   "low_weight": 0.46, "default_cab": "A212"},
-    {"id": "match_d30",   "name": "Match",        "ref": "Matchless DC30",       "family": "crunch",      "gain_window": [25, 68],"voice": "rich boutique British breakup",                 "brightness": 0.72, "mid_shape": "push",   "low_weight": 0.46, "default_cab": "A212"},
-    {"id": "super_rvb",   "name": "Super Rvb",    "ref": "Fender Super-Sonic",   "family": "clean",       "gain_window": [0, 45], "voice": "American clean with a hotter channel",          "brightness": 0.66, "mid_shape": "scoop_soft","low_weight": 0.54, "default_cab": "TR212"},
-    {"id": "vibro_king",  "name": "Vibro King",   "ref": "Fender Vibro King",    "family": "clean",       "gain_window": [0, 45], "voice": "big blackface clean, lush and round",           "brightness": 0.63, "mid_shape": "scoop_soft","low_weight": 0.60, "default_cab": "TR212"},
-    {"id": "optima_air",  "name": "Optima Air",   "ref": "NUX Optima Air",       "family": "acoustic",    "gain_window": [0, 20], "voice": "acoustic simulation voicing",                   "brightness": 0.75, "mid_shape": "scoop_soft","low_weight": 0.50, "default_cab": "G-HBIRD"}
+    {
+      "id": "jazz_clean",
+      "name": "JAZZ CLEAN",
+      "ref": "Roland JC-120",
+      "family": "clean",
+      "gain_window": [
+        0,
+        22
+      ],
+      "voice": "bright, glassy, tight low end, near-zero breakup",
+      "brightness": 0.78,
+      "mid_shape": "flat",
+      "low_weight": 0.42,
+      "default_cab": "JAZZ 212",
+      "menu_index": 1
+    },
+    {
+      "id": "deluxe_rvb",
+      "name": "DELUXE RVB",
+      "ref": "Fender Deluxe Reverb",
+      "family": "clean",
+      "gain_window": [
+        0,
+        40
+      ],
+      "voice": "warm American clean with soft edge-of-breakup",
+      "brightness": 0.6,
+      "mid_shape": "scoop_soft",
+      "low_weight": 0.52,
+      "default_cab": "BLACK 112",
+      "menu_index": 2
+    },
+    {
+      "id": "bass_mate",
+      "name": "BASS MATE",
+      "ref": "Fender Bassman",
+      "family": "crunch",
+      "gain_window": [
+        20,
+        60
+      ],
+      "voice": "thick tweed-style breakup, strong lows",
+      "brightness": 0.5,
+      "mid_shape": "push",
+      "low_weight": 0.68,
+      "default_cab": "TWEED 410",
+      "menu_index": 3
+    },
+    {
+      "id": "tweedy",
+      "name": "TWEEDY",
+      "ref": "Fender Tweed Deluxe",
+      "family": "crunch",
+      "gain_window": [
+        25,
+        65
+      ],
+      "voice": "loose, midrange-forward vintage grind",
+      "brightness": 0.48,
+      "mid_shape": "push",
+      "low_weight": 0.58,
+      "default_cab": "TWEED 112",
+      "menu_index": 4
+    },
+    {
+      "id": "twin_rvb",
+      "name": "TWIN RVB",
+      "ref": "Fender Twin Reverb",
+      "family": "clean",
+      "gain_window": [
+        0,
+        30
+      ],
+      "voice": "loud, scooped, sparkling clean headroom",
+      "brightness": 0.72,
+      "mid_shape": "scoop",
+      "low_weight": 0.55,
+      "default_cab": "TWIN 212",
+      "menu_index": 5
+    },
+    {
+      "id": "hiwire",
+      "name": "HIWIRE",
+      "ref": "Hiwatt DR103",
+      "family": "crunch",
+      "gain_window": [
+        15,
+        55
+      ],
+      "voice": "clean, stiff, hi-fi British headroom",
+      "brightness": 0.66,
+      "mid_shape": "flat",
+      "low_weight": 0.5,
+      "default_cab": "GREEN 412",
+      "menu_index": 6
+    },
+    {
+      "id": "cali_crunch",
+      "name": "CALI CRUNCH",
+      "ref": "Mesa/Boogie Mark I",
+      "family": "hi_gain",
+      "gain_window": [
+        40,
+        85
+      ],
+      "voice": "liquid mid-forward American lead",
+      "brightness": 0.58,
+      "mid_shape": "push",
+      "low_weight": 0.55,
+      "default_cab": "CALI 112",
+      "menu_index": 7
+    },
+    {
+      "id": "class_a15",
+      "name": "CLASS A15",
+      "ref": "Vox AC15",
+      "family": "crunch",
+      "gain_window": [
+        20,
+        60
+      ],
+      "voice": "chimey British breakup, upper-mid bite",
+      "brightness": 0.74,
+      "mid_shape": "push",
+      "low_weight": 0.4,
+      "default_cab": "BLUE 112",
+      "menu_index": 8
+    },
+    {
+      "id": "class_a30",
+      "name": "CLASS A30",
+      "ref": "Vox AC30",
+      "family": "crunch",
+      "gain_window": [
+        25,
+        70
+      ],
+      "voice": "jangly chime with top-end sizzle when pushed",
+      "brightness": 0.8,
+      "mid_shape": "push",
+      "low_weight": 0.42,
+      "default_cab": "BLUE 212",
+      "menu_index": 9
+    },
+    {
+      "id": "plexi_100",
+      "name": "PLEXI 100",
+      "ref": "Marshall Super Lead",
+      "family": "crunch",
+      "gain_window": [
+        35,
+        78
+      ],
+      "voice": "classic rock roar, aggressive upper mids",
+      "brightness": 0.64,
+      "mid_shape": "push",
+      "low_weight": 0.54,
+      "default_cab": "GREEN 412",
+      "menu_index": 10
+    },
+    {
+      "id": "plexi_45",
+      "name": "PLEXI 45",
+      "ref": "Marshall JTM45",
+      "family": "crunch",
+      "gain_window": [
+        30,
+        72
+      ],
+      "voice": "vintage plexi grind, woody mids",
+      "brightness": 0.56,
+      "mid_shape": "push",
+      "low_weight": 0.56,
+      "default_cab": "GREEN 412",
+      "menu_index": 11
+    },
+    {
+      "id": "brit_800",
+      "name": "BRIT 800",
+      "ref": "Marshall JCM800",
+      "family": "hi_gain",
+      "gain_window": [
+        45,
+        88
+      ],
+      "voice": "tight British high gain, cutting mids",
+      "brightness": 0.66,
+      "mid_shape": "push",
+      "low_weight": 0.5,
+      "default_cab": "T75 412",
+      "menu_index": 12
+    },
+    {
+      "id": "1987x50",
+      "name": "1987X 50W",
+      "ref": "Marshall 1987x",
+      "family": "crunch",
+      "gain_window": [
+        35,
+        75
+      ],
+      "voice": "raw plexi bark",
+      "brightness": 0.62,
+      "mid_shape": "push",
+      "low_weight": 0.52,
+      "default_cab": "GREEN 412",
+      "menu_index": 13
+    },
+    {
+      "id": "slo_100",
+      "name": "SLO 100",
+      "ref": "Soldano SLO-100",
+      "family": "hi_gain",
+      "gain_window": [
+        55,
+        95
+      ],
+      "voice": "smooth saturated lead sustain",
+      "brightness": 0.62,
+      "mid_shape": "push",
+      "low_weight": 0.55,
+      "default_cab": "SLO 412",
+      "menu_index": 14
+    },
+    {
+      "id": "fireman_hbe",
+      "name": "FIREMAN HBE",
+      "ref": "Friedman HBE",
+      "family": "hi_gain",
+      "gain_window": [
+        55,
+        95
+      ],
+      "voice": "hot-rodded Marshall, thick and aggressive",
+      "brightness": 0.64,
+      "mid_shape": "push",
+      "low_weight": 0.58,
+      "default_cab": "HBE 412",
+      "menu_index": 15
+    },
+    {
+      "id": "dual_rect",
+      "name": "DUAL RECT",
+      "ref": "Mesa Dual Rectifier",
+      "family": "metal",
+      "gain_window": [
+        60,
+        100
+      ],
+      "voice": "scooped, chunky, huge low end",
+      "brightness": 0.56,
+      "mid_shape": "scoop",
+      "low_weight": 0.78,
+      "default_cab": "RECT 412",
+      "menu_index": 16
+    },
+    {
+      "id": "die_vh4",
+      "name": "DIE VH4",
+      "ref": "Diezel VH4",
+      "family": "metal",
+      "gain_window": [
+        60,
+        100
+      ],
+      "voice": "tight modern German high gain",
+      "brightness": 0.6,
+      "mid_shape": "flat",
+      "low_weight": 0.7,
+      "default_cab": "V30 412",
+      "menu_index": 17
+    },
+    {
+      "id": "vibro_king",
+      "name": "VIB KING",
+      "ref": "Fender Vibro King",
+      "family": "clean",
+      "gain_window": [
+        0,
+        45
+      ],
+      "voice": "big blackface clean, lush and round",
+      "brightness": 0.63,
+      "mid_shape": "scoop_soft",
+      "low_weight": 0.6,
+      "default_cab": "VIBRO 212",
+      "menu_index": 18
+    },
+    {
+      "id": "budda",
+      "ref": "Budda Superdrive",
+      "family": "crunch",
+      "gain_window": [
+        20,
+        75
+      ],
+      "voice": "warm, harmonically rich boutique drive with a soft top end",
+      "brightness": 0.55,
+      "mid_shape": "push",
+      "low_weight": 0.55,
+      "note": "Profile estimated from the amp's controls (it has a CUT knob), not measured.",
+      "name": "BUDDA",
+      "default_cab": "BUTQ 212",
+      "menu_index": 19
+    },
+    {
+      "id": "mr_z38",
+      "name": "MR.Z 38",
+      "ref": "Dr. Z Maz 38",
+      "family": "crunch",
+      "gain_window": [
+        25,
+        65
+      ],
+      "voice": "boutique chime with tight bottom",
+      "brightness": 0.7,
+      "mid_shape": "push",
+      "low_weight": 0.46,
+      "default_cab": "BLUE 212",
+      "menu_index": 20
+    },
+    {
+      "id": "super_rvb",
+      "name": "SUPER RVB",
+      "ref": "Fender Super-Sonic",
+      "family": "clean",
+      "gain_window": [
+        0,
+        45
+      ],
+      "voice": "American clean with a hotter channel",
+      "brightness": 0.66,
+      "mid_shape": "scoop_soft",
+      "low_weight": 0.54,
+      "default_cab": "SUPER 212",
+      "menu_index": 21
+    },
+    {
+      "id": "brit_blues",
+      "name": "BRIT BLUES",
+      "ref": "Marshall Bluesbreaker",
+      "family": "crunch",
+      "gain_window": [
+        30,
+        70
+      ],
+      "voice": "singing British blues crunch",
+      "brightness": 0.58,
+      "mid_shape": "push",
+      "low_weight": 0.55,
+      "default_cab": "BRIT 212",
+      "menu_index": 22
+    },
+    {
+      "id": "match_d30",
+      "name": "MATCH D30",
+      "ref": "Matchless DC30",
+      "family": "crunch",
+      "gain_window": [
+        25,
+        68
+      ],
+      "voice": "rich boutique British breakup",
+      "brightness": 0.72,
+      "mid_shape": "push",
+      "low_weight": 0.46,
+      "default_cab": "DC 212",
+      "menu_index": 23
+    },
+    {
+      "id": "brit_2000",
+      "name": "BRIT 2000",
+      "ref": "Marshall JCM2000",
+      "family": "hi_gain",
+      "gain_window": [
+        50,
+        92
+      ],
+      "voice": "modern Marshall gain, firm and bright",
+      "brightness": 0.7,
+      "mid_shape": "push",
+      "low_weight": 0.52,
+      "default_cab": "T75 412",
+      "menu_index": 24
+    },
+    {
+      "id": "uber",
+      "name": "UBER HIGAIN",
+      "ref": "Bogner Uberschall",
+      "family": "metal",
+      "gain_window": [
+        65,
+        100
+      ],
+      "voice": "brutal saturated djent-friendly gain",
+      "brightness": 0.58,
+      "mid_shape": "scoop",
+      "low_weight": 0.8,
+      "default_cab": "UBER 412",
+      "menu_index": 25
+    },
+    {
+      "id": "mld",
+      "name": "MLD",
+      "note": "Not profiled yet - never picked automatically.",
+      "menu_index": 26
+    },
+    {
+      "id": "optima_air",
+      "name": "STAGEMAN",
+      "ref": "NUX Optima Air",
+      "family": "acoustic",
+      "gain_window": [
+        0,
+        20
+      ],
+      "voice": "acoustic simulation voicing",
+      "brightness": 0.75,
+      "mid_shape": "scoop_soft",
+      "low_weight": 0.5,
+      "default_cab": "G-HBIRD",
+      "menu_index": 27
+    },
+    {
+      "id": "i_deluxe_rvb",
+      "name": "I DELUXE RVB",
+      "note": "Not profiled yet - never picked automatically.",
+      "menu_index": 28
+    },
+    {
+      "id": "i_class_a30",
+      "name": "I CLASS A30",
+      "note": "Not profiled yet - never picked automatically.",
+      "menu_index": 29
+    },
+    {
+      "id": "i_fireman",
+      "name": "I FIREMAN",
+      "note": "Not profiled yet - never picked automatically.",
+      "menu_index": 30
+    }
   ],
-
-  "cabs": ["JZ120", "DR112", "BS410", "A212", "TR212", "1960", "GB412", "V412", "M-D45", "G-HBIRD", "G-J15", "USER IR"],
-
+  "cabs": [
+    {
+      "id": "jazz_212",
+      "name": "JAZZ 212",
+      "menu_index": 1
+    },
+    {
+      "id": "black_112",
+      "name": "BLACK 112",
+      "menu_index": 2
+    },
+    {
+      "id": "tweed_410",
+      "name": "TWEED 410",
+      "menu_index": 3
+    },
+    {
+      "id": "tweed_112",
+      "name": "TWEED 112",
+      "menu_index": 4
+    },
+    {
+      "id": "twin_212",
+      "name": "TWIN 212",
+      "menu_index": 5
+    },
+    {
+      "id": "custom_412",
+      "name": "CUSTOM 412",
+      "menu_index": 6
+    },
+    {
+      "id": "cali_112",
+      "name": "CALI 112",
+      "menu_index": 7
+    },
+    {
+      "id": "blue_112",
+      "name": "BLUE 112",
+      "menu_index": 8
+    },
+    {
+      "id": "blue_212",
+      "name": "BLUE 212",
+      "menu_index": 9
+    },
+    {
+      "id": "green_412",
+      "name": "GREEN 412",
+      "menu_index": 10
+    },
+    {
+      "id": "g12l_412",
+      "name": "G12L 412",
+      "menu_index": 11
+    },
+    {
+      "id": "t75_412",
+      "name": "T75 412",
+      "menu_index": 12
+    },
+    {
+      "id": "v30_412",
+      "name": "V30 412",
+      "menu_index": 13
+    },
+    {
+      "id": "slo_412",
+      "name": "SLO 412",
+      "menu_index": 14
+    },
+    {
+      "id": "hbe_412",
+      "name": "HBE 412",
+      "menu_index": 15
+    },
+    {
+      "id": "rect_412",
+      "name": "RECT 412",
+      "menu_index": 16
+    },
+    {
+      "id": "botm_412",
+      "name": "BOTM 412",
+      "menu_index": 17
+    },
+    {
+      "id": "vibro_212",
+      "name": "VIBRO 212",
+      "menu_index": 18
+    },
+    {
+      "id": "evl_112",
+      "name": "EVL 112",
+      "menu_index": 19
+    },
+    {
+      "id": "butq_212",
+      "name": "BUTQ 212",
+      "menu_index": 20
+    },
+    {
+      "id": "super_212",
+      "name": "SUPER 212",
+      "menu_index": 21
+    },
+    {
+      "id": "brit_212",
+      "name": "BRIT 212",
+      "menu_index": 22
+    },
+    {
+      "id": "dc_212",
+      "name": "DC 212",
+      "menu_index": 23
+    },
+    {
+      "id": "g12m_412",
+      "name": "G12M 412",
+      "menu_index": 24
+    },
+    {
+      "id": "uber_412",
+      "name": "UBER 412",
+      "menu_index": 25
+    },
+    {
+      "id": "agl_db810",
+      "name": "AGL DB810",
+      "menu_index": 26
+    },
+    {
+      "id": "amp_sv212",
+      "name": "AMP SV212",
+      "menu_index": 27
+    },
+    {
+      "id": "amp_sv410",
+      "name": "AMP SV410",
+      "menu_index": 28
+    },
+    {
+      "id": "amp_sv810",
+      "name": "AMP SV810",
+      "menu_index": 29
+    },
+    {
+      "id": "bassguy_410",
+      "name": "BASSGUY 410",
+      "menu_index": 30
+    },
+    {
+      "id": "eden_410",
+      "name": "EDEN 410",
+      "menu_index": 31
+    },
+    {
+      "id": "mkb_410",
+      "name": "MKB 410",
+      "menu_index": 32
+    },
+    {
+      "id": "trc_410",
+      "name": "TRC 410",
+      "menu_index": 33
+    },
+    {
+      "id": "g_hbird",
+      "name": "G-HBIRD",
+      "menu_index": 34
+    },
+    {
+      "id": "g_j15",
+      "name": "G-J15",
+      "menu_index": 35
+    },
+    {
+      "id": "m_d45",
+      "name": "M-D45",
+      "menu_index": 36
+    }
+  ],
   "efx": [
-    {"id": "none",         "name": "(off)",        "gain_add": 0,  "color": "none",      "params": []},
-    {"id": "katana_boost", "name": "Katana Boost", "gain_add": 8,  "color": "clean_lift","params": ["Volume", "Boost"]},
-    {"id": "rc_boost",     "name": "RC Boost",     "gain_add": 10, "color": "full",      "params": ["Volume", "Gain", "Bass", "Treble"]},
-    {"id": "ac_boost",     "name": "AC Boost",     "gain_add": 14, "color": "bright",    "params": ["Volume", "Gain", "Bass", "Treble"]},
-    {"id": "st_singer",    "name": "ST Singer",    "gain_add": 16, "color": "mid",       "params": ["Volume", "Gain", "Filter"]},
-    {"id": "blues_dry",    "name": "Blues Drive",  "gain_add": 22, "color": "warm",      "params": ["Level", "Gain", "Tone"]},
-    {"id": "morning_dry",  "name": "Morning Drive","gain_add": 24, "color": "warm",      "params": ["Level", "Gain", "Tone"]},
-    {"id": "t_scream",     "name": "T Screamer",   "gain_add": 20, "color": "mid_hump",  "params": ["Level", "Gain", "Tone"]},
-    {"id": "red_dirt",     "name": "Red Dirt",     "gain_add": 24, "color": "mid_hump",  "params": ["Level", "Gain", "Tone"]},
-    {"id": "crunch",       "name": "Crunch",       "gain_add": 30, "color": "full",      "params": ["Level", "Gain", "Tone"]},
-    {"id": "distortion_p", "name": "Distortion+",  "gain_add": 34, "color": "bright",    "params": ["Output", "Sensitivity"]},
-    {"id": "dist_one",     "name": "Dist One",     "gain_add": 36, "color": "full",      "params": ["Level", "Gain", "Tone"]},
-    {"id": "eat_dist",     "name": "Eat Dist",     "gain_add": 40, "color": "scoop",     "params": ["Level", "Gain", "Tone"]},
-    {"id": "muff_fuzz",    "name": "Muff Fuzz",    "gain_add": 46, "color": "scoop",     "params": ["Volume", "Sustain", "Tone"]},
-    {"id": "red_fuzz",     "name": "Red Fuzz",     "gain_add": 48, "color": "raw",       "params": ["Volume", "Fuzz", "Tone"]},
-    {"id": "touch_wah",    "name": "Touch Wah",    "gain_add": 0,  "color": "filter",    "params": ["Type", "Wow", "Sense"]}
+    {
+      "id": "none",
+      "name": "(off)",
+      "gain_add": 0,
+      "color": "none",
+      "params": []
+    },
+    {
+      "id": "distortion_p",
+      "name": "DIST+",
+      "gain_add": 34,
+      "color": "bright",
+      "params": [
+        "Output",
+        "Sensitivity"
+      ],
+      "menu_index": 1
+    },
+    {
+      "id": "rc_boost",
+      "name": "RC BST",
+      "gain_add": 10,
+      "color": "full",
+      "params": [
+        "Volume",
+        "Gain",
+        "Bass",
+        "Treble"
+      ],
+      "menu_index": 2
+    },
+    {
+      "id": "ac_boost",
+      "name": "AC BST",
+      "gain_add": 14,
+      "color": "bright",
+      "params": [
+        "Volume",
+        "Gain",
+        "Bass",
+        "Treble"
+      ],
+      "menu_index": 3
+    },
+    {
+      "id": "dist_one",
+      "name": "DIST UNO",
+      "gain_add": 36,
+      "color": "full",
+      "params": [
+        "Level",
+        "Gain",
+        "Tone"
+      ],
+      "menu_index": 4
+    },
+    {
+      "id": "t_scream",
+      "name": "T SCREAMER",
+      "gain_add": 20,
+      "color": "mid_hump",
+      "params": [
+        "Level",
+        "Gain",
+        "Tone"
+      ],
+      "menu_index": 5
+    },
+    {
+      "id": "blues_dry",
+      "name": "BLUES DRIVE",
+      "gain_add": 22,
+      "color": "warm",
+      "params": [
+        "Level",
+        "Gain",
+        "Tone"
+      ],
+      "menu_index": 6
+    },
+    {
+      "id": "morning_dry",
+      "name": "MORNING DRIVE",
+      "gain_add": 24,
+      "color": "warm",
+      "params": [
+        "Level",
+        "Gain",
+        "Tone"
+      ],
+      "menu_index": 7
+    },
+    {
+      "id": "modern_dist",
+      "note": "Not profiled yet - never picked automatically.",
+      "name": "MODERN DIST",
+      "menu_index": 8
+    },
+    {
+      "id": "red_dirt",
+      "name": "RED DIST",
+      "gain_add": 24,
+      "color": "mid_hump",
+      "params": [
+        "Level",
+        "Drive",
+        "Tone"
+      ],
+      "menu_index": 9
+    },
+    {
+      "id": "crunch",
+      "name": "CRUNCH",
+      "gain_add": 30,
+      "color": "full",
+      "params": [
+        "Level",
+        "Gain",
+        "Tone"
+      ],
+      "menu_index": 10
+    },
+    {
+      "id": "muff_fuzz",
+      "name": "MUF DIST",
+      "gain_add": 46,
+      "color": "scoop",
+      "params": [
+        "Volume",
+        "Sustain",
+        "Tone"
+      ],
+      "menu_index": 11
+    },
+    {
+      "id": "katana_boost",
+      "name": "KATANA",
+      "gain_add": 8,
+      "color": "clean_lift",
+      "params": [
+        "Volume",
+        "Boost"
+      ],
+      "menu_index": 12
+    },
+    {
+      "id": "red_fuzz",
+      "name": "RED FUZZ",
+      "gain_add": 48,
+      "color": "raw",
+      "params": [
+        "Volume",
+        "Fuzz",
+        "Tone"
+      ],
+      "menu_index": 13
+    },
+    {
+      "id": "touch_wah",
+      "name": "TOUCH WAH",
+      "gain_add": 0,
+      "color": "filter",
+      "params": [
+        "Type",
+        "Wow",
+        "Sense"
+      ],
+      "menu_index": 14
+    }
   ],
-
   "comps": [
-    {"id": "rose_comp",   "name": "Rose Comp",   "params": ["Level", "Sustain"],           "character": "squishy, adds sustain, softens picking"},
-    {"id": "k_comp",      "name": "K Comp",      "params": ["Level", "Sustain", "Clipping"],"character": "transparent with optional clip, country/funk snap"},
-    {"id": "studio_comp", "name": "Studio Comp", "params": ["Level", "Threshold", "Ratio", "Release"], "character": "full studio control, gentle glue"}
+    {
+      "id": "red_comp",
+      "name": "RED COMP",
+      "menu_index": 1,
+      "note": "Knob names not confirmed yet - never picked automatically."
+    },
+    {
+      "id": "rose_comp",
+      "name": "ROSE COMP",
+      "params": [
+        "Level",
+        "Sustain"
+      ],
+      "character": "squishy, adds sustain, softens picking",
+      "menu_index": 2
+    }
   ],
-
   "mods": [
-    {"id": "ce_1",       "name": "CE-1",        "kind": "chorus",  "params": ["Rate", "Depth", "Intensity"]},
-    {"id": "ce_2",       "name": "CE-2",        "kind": "chorus",  "params": ["Rate", "Depth"]},
-    {"id": "st_chorus",  "name": "St. Chorus",  "kind": "chorus",  "params": ["Rate", "Width", "Intensity"]},
-    {"id": "sch_1",      "name": "SCH-1",       "kind": "chorus",  "params": ["Rate", "Depth", "Tone", "Mix"]},
-    {"id": "scf",        "name": "SCF",         "kind": "chorus",  "params": ["Speed", "Width", "Intensity", "Mode"]},
-    {"id": "vibrator",   "name": "Vibrator",    "kind": "vibrato", "params": ["Rate", "Depth", "Rise Time"]},
-    {"id": "detune",     "name": "Detune",      "kind": "detune",  "params": ["Shift-L", "Shift-R", "Mix"]},
-    {"id": "flanger",    "name": "Flanger",     "kind": "flanger", "params": ["Rate", "Width", "Feedback", "Level"]},
-    {"id": "phase_90",   "name": "Phase 90",    "kind": "phaser",  "params": ["Speed"]},
-    {"id": "phase_100",  "name": "Phase 100",   "kind": "phaser",  "params": ["Speed", "Intensity"]},
-    {"id": "u_vibe",     "name": "U-Vibe",      "kind": "univibe", "params": ["Speed", "Volume", "Intensity", "Mode"]},
-    {"id": "tremolo",    "name": "Tremolo",     "kind": "tremolo", "params": ["Rate", "Depth"]},
-    {"id": "rotary",     "name": "Rotary",      "kind": "rotary",  "params": ["Speed", "Balance"]},
-    {"id": "harmonist",  "name": "Harmonist",   "kind": "pitch",   "params": ["Key", "Shift", "Level"]}
+    {
+      "id": "ce_1",
+      "name": "CE-1",
+      "kind": "chorus",
+      "params": [
+        "Rate",
+        "Depth",
+        "Intensity"
+      ],
+      "menu_index": 1
+    },
+    {
+      "id": "ce_2",
+      "name": "CLASSIC CHORUS",
+      "kind": "chorus",
+      "params": [
+        "Rate",
+        "Depth"
+      ],
+      "menu_index": 2
+    },
+    {
+      "id": "st_chorus",
+      "name": "ST.CHORUS",
+      "kind": "chorus",
+      "params": [
+        "Rate",
+        "Width",
+        "Intensity"
+      ],
+      "menu_index": 3
+    },
+    {
+      "id": "vibrator",
+      "name": "VIBRATO",
+      "kind": "vibrato",
+      "params": [
+        "Rate",
+        "Depth",
+        "Rise Time"
+      ],
+      "menu_index": 4
+    },
+    {
+      "id": "detune",
+      "name": "DETUNE",
+      "kind": "detune",
+      "params": [
+        "Shift-L",
+        "Shift-R",
+        "Mix"
+      ],
+      "menu_index": 5
+    },
+    {
+      "id": "flanger",
+      "name": "FLANGE",
+      "kind": "flanger",
+      "params": [
+        "Rate",
+        "Width",
+        "Feedback",
+        "Level"
+      ],
+      "menu_index": 6
+    },
+    {
+      "id": "phase_90",
+      "name": "PH 90",
+      "kind": "phaser",
+      "params": [
+        "Speed"
+      ],
+      "menu_index": 7
+    },
+    {
+      "id": "phase_100",
+      "name": "PHASE 100",
+      "kind": "phaser",
+      "params": [
+        "Speed",
+        "Intensity"
+      ],
+      "menu_index": 8
+    },
+    {
+      "id": "scf",
+      "name": "CHORUS+",
+      "kind": "chorus",
+      "params": [
+        "Speed",
+        "Width",
+        "Intensity",
+        "Mode"
+      ],
+      "menu_index": 9
+    },
+    {
+      "id": "u_vibe",
+      "name": "U-VIBE",
+      "kind": "univibe",
+      "params": [
+        "Speed",
+        "Volume",
+        "Intensity",
+        "Mode"
+      ],
+      "menu_index": 10
+    },
+    {
+      "id": "tremolo",
+      "name": "TREM",
+      "kind": "tremolo",
+      "params": [
+        "Rate",
+        "Depth"
+      ],
+      "menu_index": 11
+    },
+    {
+      "id": "rotary",
+      "name": "RTY SPK",
+      "kind": "rotary",
+      "params": [
+        "Speed",
+        "Balance"
+      ],
+      "menu_index": 12
+    },
+    {
+      "id": "harmonist",
+      "name": "HARMONY",
+      "kind": "pitch",
+      "params": [
+        "Key",
+        "Shift",
+        "Level"
+      ],
+      "menu_index": 13
+    },
+    {
+      "id": "sch_1",
+      "name": "SCH-1",
+      "kind": "chorus",
+      "params": [
+        "Rate",
+        "Depth",
+        "Tone",
+        "Mix"
+      ],
+      "menu_index": 14
+    }
   ],
-
   "delays": [
-    {"id": "analog_delay","name": "Analog Delay","character": "dark, warm repeats", "params": ["Intensity", "Rate", "Echo"]},
-    {"id": "digi_delay",  "name": "Digital Delay","character": "clear, faithful repeats", "params": ["E.Level", "F.Back", "D.Time"]},
-    {"id": "mod_delay",   "name": "Mod Delay",  "character": "chorused repeats",   "params": ["E.Level", "F.Back", "D.Time", "Mod"]},
-    {"id": "tape_echo",   "name": "Tape Echo",  "character": "wobbly, filtered slapback and long echoes", "params": ["E.Level", "F.Back", "D.Time"]},
-    {"id": "reverse",     "name": "Reverse",    "character": "backwards swells",   "params": ["E.Level", "F.Back", "D.Time"]},
-    {"id": "pan_delay",   "name": "Pan Delay",  "character": "ping-pong stereo",   "params": ["E.Level", "F.Back", "D.Time"]},
-    {"id": "phi_delay",   "name": "Phi Delay",  "character": "modulated ambient",  "params": ["E.Level", "F.Back", "D.Time", "Mod"]}
+    {
+      "id": "analog_delay",
+      "name": "ANALOG DELAY",
+      "character": "dark, warm repeats",
+      "params": [
+        "Repeat Rate",
+        "Echo",
+        "Intensity"
+      ],
+      "menu_index": 1
+    },
+    {
+      "id": "digi_delay",
+      "name": "DIGI DELAY",
+      "character": "clear, faithful repeats",
+      "params": [
+        "E.Level",
+        "F.Back",
+        "D.Time"
+      ],
+      "menu_index": 2
+    },
+    {
+      "id": "mod_delay",
+      "name": "MODULATE",
+      "character": "chorused repeats",
+      "params": [
+        "E.Level",
+        "F.Back",
+        "D.Time",
+        "Mod"
+      ],
+      "menu_index": 3
+    },
+    {
+      "id": "tape_echo",
+      "name": "TAPE ECHO",
+      "character": "wobbly, filtered slapback and long echoes",
+      "params": [
+        "E.Level",
+        "F.Back",
+        "D.Time"
+      ],
+      "menu_index": 4
+    },
+    {
+      "id": "reverse",
+      "name": "REVERSE",
+      "character": "backwards swells",
+      "params": [
+        "E.Level",
+        "F.Back",
+        "D.Time"
+      ],
+      "menu_index": 5
+    },
+    {
+      "id": "pan_delay",
+      "name": "PAN",
+      "character": "ping-pong stereo",
+      "params": [
+        "E.Level",
+        "F.Back",
+        "D.Time"
+      ],
+      "menu_index": 6
+    },
+    {
+      "id": "phi_delay",
+      "name": "PHI DELAY",
+      "character": "modulated ambient",
+      "params": [
+        "E.Level",
+        "F.Back",
+        "D.Time",
+        "Mod"
+      ],
+      "menu_index": 7
+    }
   ],
-
   "reverbs": [
-    {"id": "room",    "name": "Room",    "typical_rt60": [0.4, 1.0], "params": ["Decay", "Pre Delay", "Level"]},
-    {"id": "hall",    "name": "Hall",    "typical_rt60": [1.4, 4.0], "params": ["Decay", "Pre Delay", "Level"]},
-    {"id": "plate",   "name": "Plate",   "typical_rt60": [0.9, 2.2], "params": ["Decay", "Pre Delay", "Level"]},
-    {"id": "spring",  "name": "Spring",  "typical_rt60": [0.8, 1.8], "params": ["Decay", "Pre Delay", "Level"]},
-    {"id": "shimmer", "name": "Shimmer", "typical_rt60": [2.0, 6.0], "params": ["Decay", "Pre Delay", "Level", "Mix"]},
-    {"id": "damp",    "name": "Damp",    "typical_rt60": [0.5, 1.5], "params": ["Decay", "Pre Delay", "Level"]}
+    {
+      "id": "room",
+      "name": "ROOM",
+      "typical_rt60": [
+        0.4,
+        1.0
+      ],
+      "params": [
+        "Decay",
+        "Predelay",
+        "Level"
+      ],
+      "menu_index": 1
+    },
+    {
+      "id": "hall",
+      "name": "HALL",
+      "typical_rt60": [
+        1.4,
+        4.0
+      ],
+      "params": [
+        "Decay",
+        "Predelay",
+        "Level"
+      ],
+      "menu_index": 2
+    },
+    {
+      "id": "plate",
+      "name": "PLATE",
+      "typical_rt60": [
+        0.9,
+        2.2
+      ],
+      "params": [
+        "Decay",
+        "Predelay",
+        "Level"
+      ],
+      "menu_index": 3
+    },
+    {
+      "id": "spring",
+      "name": "SPRING",
+      "typical_rt60": [
+        0.8,
+        1.8
+      ],
+      "params": [
+        "Decay",
+        "Predelay",
+        "Level"
+      ],
+      "menu_index": 4
+    },
+    {
+      "id": "shimmer",
+      "name": "SHIMMER",
+      "typical_rt60": [
+        2.0,
+        6.0
+      ],
+      "params": [
+        "Decay",
+        "Predelay",
+        "Level",
+        "Mix"
+      ],
+      "menu_index": 5
+    }
   ],
-
   "eqs": [
-    {"id": "6band",  "name": "6-Band EQ",  "bands_hz": [100, 220, 500, 1200, 2600, 6400]},
-    {"id": "10band", "name": "10-Band EQ", "bands_hz": [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]},
-    {"id": "para",   "name": "Parametric", "params": ["Low Gain", "Low Freq", "Mid Gain", "Mid Freq", "Mid Q", "High Gain", "High Freq"]}
+    {
+      "id": "6band",
+      "name": "6-EQ",
+      "bands_hz": [
+        100,
+        220,
+        500,
+        1200,
+        2600,
+        6400
+      ],
+      "menu_index": 1
+    },
+    {
+      "id": "10band",
+      "name": "10-EQ",
+      "bands_hz": [
+        31,
+        62,
+        125,
+        250,
+        500,
+        1000,
+        2000,
+        4000,
+        8000,
+        16000
+      ],
+      "menu_index": 2
+    }
   ],
-
-  "noise_gate": {"name": "Noise Gate", "params": ["Threshold", "Decay"]}
+  "noise_gate": {
+    "name": "NR",
+    "params": [
+      "Sens",
+      "Decay"
+    ]
+  }
 }

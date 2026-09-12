@@ -1,4 +1,4 @@
-# Tone Chaser - app + Postgres
+# Tone Sear - app + Postgres
 #
 #   cp .env.example .env      # then edit it (SESSION_SECRET is required)
 #   docker compose up -d --build

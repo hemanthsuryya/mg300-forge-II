@@ -88,7 +88,8 @@ def measure(seg, sr, tempo_bpm, stereo=None, sep_conf=0.8):
 
 
 def run_job(audio_path: str, job_dir: str, progress=lambda p, msg: None,
-            demucs_model: str = "htdemucs_6s", max_tones: int = 5):
+            demucs_model: str = "htdemucs_6s", max_tones: int = 5,
+            display_name: str = ""):
     job_dir = Path(job_dir)
     job_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
@@ -157,7 +158,7 @@ def run_job(audio_path: str, job_dir: str, progress=lambda p, msg: None,
         })
 
     out = {
-        "source": Path(audio_path).name,
+        "source": display_name or Path(audio_path).name,
         "duration_s": round(duration, 1),
         "tempo_bpm": round(tempo, 1),
         "separation": sep,
