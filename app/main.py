@@ -1,5 +1,5 @@
 """
-Tone Chaser - local web app.
+Tone Sear - local web app.
 
 Drops a song in, comes back with MG-300 MKII preset recipes.
 
@@ -23,14 +23,14 @@ import secrets
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Request, UploadFile, File, Form, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from starlette.middleware.sessions import SessionMiddleware
 
 from .pipeline import run_job
 from .report import render_html_report, render_text_sheet
-from . import perceptual, mapper, validate as validate_mod
+from . import perceptual, mapper, preset_format, validate as validate_mod
 from .db import init_db, session_scope
 from .models import Job, User
 from . import auth as auth_mod
@@ -59,22 +59,22 @@ def _startup_banner() -> None:
     """
     from .db import DATABASE_URL
     where = DATABASE_URL.split("@")[-1] if "@" in DATABASE_URL else DATABASE_URL
-    print(f"Tone Chaser · database {where}")
+    print(f"Tone Sear · database {where}")
     if auth_mod.google_enabled():
         cid = auth_mod.GOOGLE_CLIENT_ID
         base = auth_mod.BASE_URL or "http://127.0.0.1:8000"
-        print(f"Tone Chaser · Google sign-in ON, client {cid}")
-        print(f"Tone Chaser · this exact URI must be authorised in the Google "
+        print(f"Tone Sear · Google sign-in ON, client {cid}")
+        print(f"Tone Sear · this exact URI must be authorised in the Google "
               f"console: {base}/auth/google/callback")
         if not cid.endswith(".apps.googleusercontent.com"):
-            print("Tone Chaser · WARNING: that does not look like a Google "
+            print("Tone Sear · WARNING: that does not look like a Google "
                   "client id (they end in .apps.googleusercontent.com)")
     else:
-        print("Tone Chaser · Google sign-in OFF (set GOOGLE_CLIENT_ID and "
+        print("Tone Sear · Google sign-in OFF (set GOOGLE_CLIENT_ID and "
               "GOOGLE_CLIENT_SECRET to enable), email/password accounts only")
 
 
-app = FastAPI(title="Tone Chaser", lifespan=_lifespan)
+app = FastAPI(title="Tone Sear", lifespan=_lifespan)
 
 # A generated secret is fine for a single local process, but it changes on every
 # restart (logging everyone out) and differs per worker, so a real deployment
@@ -132,21 +132,35 @@ def _ytdlp() -> str | None:
     return str(local) if local.is_file() else None
 
 
-def _fetch_url(url: str, dest: Path, log) -> Path:
+def _fetch_url(url: str, dest: Path, log) -> tuple[Path, str]:
     exe = _ytdlp()
     if not exe:
         raise RuntimeError("yt-dlp is not installed. Run: pip install yt-dlp")
     log(None, "Downloading audio from the URL")
     out = dest / "source.%(ext)s"
     cmd = [exe, "-x", "--audio-format", "wav", "--audio-quality", "0",
-           "-o", str(out), "--no-playlist", url]
+           "-o", str(out), "--no-playlist", "--write-info-json", url]
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
     if r.returncode != 0:
         raise RuntimeError(f"Download failed: {(r.stderr or '')[-500:]}")
     files = [p for p in dest.iterdir() if p.suffix.lower() in AUDIO_EXT]
     if not files:
         raise RuntimeError("Download produced no audio file.")
-    return max(files, key=lambda p: p.stat().st_size)
+    return max(files, key=lambda p: p.stat().st_size), _title(dest)
+
+
+def _title(dest: Path) -> str:
+    """'Artist - Track' when the site knows both, else the page title."""
+    info = dest / "source.info.json"
+    try:
+        meta = json.loads(info.read_text())
+    except (OSError, ValueError):
+        return ""
+    finally:
+        info.unlink(missing_ok=True)
+    if meta.get("artist") and meta.get("track"):
+        return f"{meta['artist']} - {meta['track']}"[:500]
+    return (meta.get("title") or "")[:500]
 
 
 def _owned_job(job_id: str, user: User) -> Job:
@@ -177,17 +191,21 @@ def _finish_job(job_id: str, **fields) -> None:
         print(f"warning: could not update job {job_id}: {e}")
 
 
-def _work(job_id: str, audio: Path | None, url: str | None, model: str, max_tones: int):
+def _work(job_id: str, audio: Path | None, url: str | None, model: str, max_tones: int,
+          name: str = ""):
     d = JOBS / job_id
     cb = _progress(job_id)
     try:
         _set(job_id, state="running", progress=1)
         _finish_job(job_id, state="running", progress=1)
         if audio is None:
-            audio = _fetch_url(url, d, cb)
-            _set(job_id, source_name=audio.name)
-        result = run_job(str(audio), str(d), progress=cb,
-                         demucs_model=model, max_tones=max_tones)
+            audio, title = _fetch_url(url, d, cb)
+            if title:
+                name = title
+                _set(job_id, source_name=title)
+                _finish_job(job_id, title=title)
+        result = run_job(str(audio), str(d), progress=cb, demucs_model=model,
+                         max_tones=max_tones, display_name=name)
         (d / "report.html").write_text(render_html_report(result), encoding="utf-8")
         (d / "settings.txt").write_text(render_text_sheet(result), encoding="utf-8")
         (d / "presets.json").write_text(json.dumps(
@@ -232,7 +250,7 @@ async def analyze(file: UploadFile | None = File(None), url: str = Form(""),
     _set(job_id, state="queued", progress=0, log=[], source_name=name,
          status_text="Queued")
     threading.Thread(target=_work, args=(job_id, audio, url.strip(), model,
-                                         int(max_tones)), daemon=True).start()
+                                         int(max_tones), name), daemon=True).start()
     return {"job_id": job_id}
 
 
@@ -255,13 +273,23 @@ async def job(job_id: str, user: User = Depends(require_user)):
 
 
 @app.get("/api/jobs")
-async def list_jobs(user: User = Depends(require_user), limit: int = 30):
+async def list_jobs(user: User = Depends(require_user), limit: int = 30,
+                    q: str = "", hidden: bool = False):
+    """Newest first. `q` matches song titles, file names and links."""
+    is_hidden = func.coalesce(Job.hidden, False)
+    stmt = select(Job).where(Job.user_id == user.id, is_hidden == hidden)
+    if q.strip():
+        like = "%" + q.strip().replace("\\", "\\\\").replace("%", "\\%") \
+                              .replace("_", "\\_") + "%"
+        stmt = stmt.where(or_(Job.title.ilike(like, escape="\\"),
+                              Job.source_name.ilike(like, escape="\\")))
     with session_scope() as s:
-        rows = s.scalars(
-            select(Job).where(Job.user_id == user.id)
-            .order_by(Job.created_at.desc()).limit(max(1, min(limit, 100)))
-        ).all()
-        return {"jobs": [r.public() for r in rows]}
+        rows = s.scalars(stmt.order_by(Job.created_at.desc())
+                         .limit(max(1, min(limit, 100)))).all()
+        counts = dict(s.execute(select(is_hidden, func.count())
+                                .where(Job.user_id == user.id).group_by(is_hidden)).all())
+        return {"jobs": [r.public() for r in rows],
+                "total": counts.get(False, 0), "hidden_count": counts.get(True, 0)}
 
 
 @app.delete("/api/job/{job_id}")
@@ -275,6 +303,16 @@ async def delete_job(job_id: str, user: User = Depends(require_user)):
     with _lock:
         _state.pop(job_id, None)
     return {"deleted": job_id}
+
+
+@app.post("/api/job/{job_id}/hidden")
+async def set_hidden(job_id: str, payload: dict, user: User = Depends(require_user)):
+    """Hide an analysis from the history list, or bring it back. Nothing is deleted."""
+    _owned_job(job_id, user)
+    hidden = bool(payload.get("hidden", True))
+    with session_scope() as s:
+        s.get(Job, job_id).hidden = hidden
+    return {"job_id": job_id, "hidden": hidden}
 
 
 @app.get("/api/job/{job_id}/clip/{name}")
@@ -299,7 +337,7 @@ async def download(job_id: str, what: str, user: User = Depends(require_user)):
     p = JOBS / job_id / fn
     if not p.is_file():
         raise HTTPException(404, "Not ready")
-    return FileResponse(p, media_type=mt, filename=f"tonechaser_{job_id}_{fn}")
+    return FileResponse(p, media_type=mt, filename=f"tonesear_{job_id}_{fn}")
 
 
 def _tone_or_404(job_id: str, tone_id: int, user: User):
@@ -340,6 +378,28 @@ async def adjust(job_id: str, tone_id: int, payload: dict,
     preset = mapper.build_preset(m2, name=tone["name"])
     return {"preset": preset, "axes": perceptual.to_axes(m2), "moved": moved,
             "baseline_axes": perceptual.to_axes(m)}
+
+
+@app.get("/api/job/{job_id}/tone/{tone_id}/patch")
+async def patch_file(job_id: str, tone_id: int, axes: str = "",
+                     user: User = Depends(require_user)):
+    """
+    The tone as a QuickTone preset file, for QuickTone's Import button. `axes` is
+    the radar position as JSON; without it the file matches the analysis.
+    """
+    res, tone = _tone_or_404(job_id, tone_id, user)
+    try:
+        wanted = {k: float(v) for k, v in (json.loads(axes) if axes.strip() else {}).items()
+                  if k in perceptual.AXIS_IDS}
+    except (ValueError, AttributeError, TypeError):
+        raise HTTPException(400, "axes must be a JSON object of axis positions")
+    m2, _ = perceptual.apply_axes(tone["measurements_raw"], wanted)
+    data, _ = preset_format.from_preset(mapper.build_preset(m2, name=tone["name"]))
+    stem = "".join(ch for ch in Path(res["source"]).stem
+                   if ch.isascii() and (ch.isalnum() or ch in " -_"))[:40]
+    fn = f"{stem} - {tone['name']}".strip(" -") + ".mg300MK2patch"
+    return Response(data, media_type="application/octet-stream",
+                    headers={"Content-Disposition": f'attachment; filename="{fn}"'})
 
 
 @app.post("/api/job/{job_id}/tone/{tone_id}/validate")

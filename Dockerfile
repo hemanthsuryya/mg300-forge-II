@@ -1,4 +1,4 @@
-# Tone Chaser - Hugging Face Spaces build.
+# Tone Sear - Hugging Face Spaces build.
 #
 # Differences from the compose build on the main branch, all forced by the
 # Spaces runtime:

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start Tone Chaser on http://127.0.0.1:8000
+# Start Tone Sear on http://127.0.0.1:8000
 set -e
 cd "$(dirname "$0")"
 

@@ -15,7 +15,7 @@ import tempfile
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Point the app at a throwaway database and jobs tree before it is imported.
-_TMP = tempfile.mkdtemp(prefix="tonechaser-auth-test-")
+_TMP = tempfile.mkdtemp(prefix="tonesear-auth-test-")
 os.environ["DATA_DIR"] = _TMP
 os.environ["DATABASE_URL"] = f"sqlite:///{_TMP}/test.db"
 os.environ["JOBS_DIR"] = f"{_TMP}/jobs"
@@ -67,7 +67,7 @@ check("registered account is not google-linked", r.json()["google_linked"] is Fa
 
 r = c.get("/")
 check("index serves the app once signed in", r.status_code == 200 and
-      "Tone Chaser" in r.text)
+      "Tone Sear" in r.text)
 
 # short password
 c2 = client()

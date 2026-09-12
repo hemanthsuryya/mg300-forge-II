@@ -37,7 +37,7 @@ FIXES = {
     "honk":   ("AMP Middle, and the drive pedal's voicing",
                "raise Middle, or a mid-humped pedal like T Screamer",
                "lower Middle, or a scooped pedal"),
-    "squash": ("COMP Sustain / Threshold",
+    "squash": ("COMP Sustain",
                "more compression", "less compression, or switch it off"),
     "space":  ("RVB Level, then Decay",
                "more reverb level", "less reverb level"),
@@ -91,8 +91,8 @@ def compare_capture(reference_measurements: dict, capture_path: str,
     longest = max(((b - a) / sr for a, b in tails), default=0.0)
     if longest < 1.5:
         warnings.append(
-            f"The longest decay tail in this capture is {longest:.1f}s. Space and "
-            f"Echo need a tail to measure - stop playing and let at least 3 seconds "
+            f"The longest decay tail in this capture is {longest:.1f}s. Reverb and "
+            f"Delay need a tail to measure - stop playing and let at least 3 seconds "
             f"of decay record before you stop the take, then re-capture.")
     cap_axes = perceptual.to_axes(cap_m)
     ref_axes = dict(target_axes) if target_axes else perceptual.to_axes(reference_measurements)
@@ -152,5 +152,5 @@ def compare_capture(reference_measurements: dict, capture_path: str,
         "note": "Levels are normalised out, so overall loudness differences do "
                 "not count against the score. Record the capture with the same "
                 "playing you are comparing against - a different performance "
-                "moves Squash and Grit on its own.",
+                "moves Compression and Drive on its own.",
     }

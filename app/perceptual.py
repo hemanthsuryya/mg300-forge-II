@@ -3,7 +3,7 @@ The perceptual layer: nine musician-language axes over the measurements.
 
 Design rule that makes this trustworthy: an axis does NOT edit a knob. It edits
 the MEASUREMENT the knob was derived from, and then the ordinary mapper re-runs.
-Drag Grit up and the chain re-solves the way it would have if the song had
+Drag Drive up and the chain re-solves the way it would have if the song had
 actually been that saturated - the amp can change, the drive pedal can change,
 the compressor can drop out because the amp is now doing the squashing.
 
@@ -19,21 +19,21 @@ import math
 import numpy as np
 
 AXES = [
-    {"id": "grit",   "label": "Grit",   "hint": "raspiness, saturation",
+    {"id": "grit",   "label": "Drive",  "hint": "distortion, saturation",
      "from": "crest factor + spectral valley depth", "drives": "AMP Gain, drive pedal"},
-    {"id": "body",   "label": "Body",   "hint": "low-end weight",
+    {"id": "body",   "label": "Low End", "hint": "bass weight",
      "from": "80-250 Hz balance", "drives": "AMP Bass, EQ lows, cab"},
-    {"id": "bite",   "label": "Bite",   "hint": "presence, attack edge",
+    {"id": "bite",   "label": "Brightness", "hint": "presence, pick attack",
      "from": "1.6-8 kHz balance + centroid", "drives": "AMP Treble/Presence, cab"},
-    {"id": "honk",   "label": "Honk",   "hint": "scooped to mid-forward",
+    {"id": "honk",   "label": "Mids",   "hint": "scooped to mid-forward",
      "from": "mid scoop in dB", "drives": "AMP Middle, pedal voicing"},
-    {"id": "squash", "label": "Squash", "hint": "compression, sustain",
+    {"id": "squash", "label": "Compression", "hint": "sustain, evenness",
      "from": "crest factor + envelope spread", "drives": "COMP"},
-    {"id": "space",  "label": "Space",  "hint": "wet to dry",
+    {"id": "space",  "label": "Reverb", "hint": "dry to wet",
      "from": "RT60 + late tail energy", "drives": "RVB"},
-    {"id": "echo",   "label": "Echo",   "hint": "delay amount",
+    {"id": "echo",   "label": "Delay",  "hint": "echo amount",
      "from": "repeat level + feedback", "drives": "DLY"},
-    {"id": "swirl",  "label": "Swirl",  "hint": "chorus, phaser, tremolo",
+    {"id": "swirl",  "label": "Modulation", "hint": "chorus, phaser, tremolo",
      "from": "modulation depth", "drives": "MOD"},
     {"id": "wah",    "label": "Wah",    "hint": "envelope filter",
      "from": "not measured - taste control", "drives": "EFX slot (Touch Wah)"},

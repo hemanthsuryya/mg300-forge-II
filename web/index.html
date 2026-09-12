@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Tone Chaser</title>
+<title>Tone Sear</title>
 <style>
 /* ------------------------------------------------------------------ *
- * Tone Chaser
+ * Tone Sear
  *
  * Palette is brass-on-charcoal: the accent is the colour of a wound
  * string, not a UI orange. Guitar references are structural rather than
@@ -312,7 +312,7 @@ th{color:var(--faint);font-weight:500;font-size:11px;letter-spacing:.06em;text-t
           <line x1="6" y1="19.9" x2="22" y2="19.9" stroke-width=".45"/>
         </g>
       </svg>
-      <span class="brand-name">Tone <em>Chaser</em></span>
+      <span class="brand-name">Tone <em>Sear</em></span>
     </a>
     <div class="topbar-right">
       <div class="sub" id="health"></div>
@@ -333,7 +333,7 @@ th{color:var(--faint);font-weight:500;font-size:11px;letter-spacing:.06em;text-t
 
 <div class="hero">
   <h1>Chase a tone to its <em>settings</em>.</h1>
-  <p>Drop in a song. Tone Chaser isolates the guitar, splits it into distinct
+  <p>Drop in a song. Tone Sear isolates the guitar, splits it into distinct
      tones, measures each one, and writes an MG-300 MKII preset recipe.</p>
 </div>
 
@@ -387,8 +387,11 @@ th{color:var(--faint);font-weight:500;font-size:11px;letter-spacing:.06em;text-t
   <div class="sect">
     <span class="sect-label">Your analyses</span>
     <span class="sect-line"></span>
+    <button class="linkbtn" id="histHiddenBtn" hidden></button>
     <button class="linkbtn" id="histRefresh">Refresh</button>
   </div>
+  <input type="text" id="histSearch" placeholder="Search by song, file name or link"
+         aria-label="Search your analyses" style="width:100%;margin:4px 0 8px">
   <ul class="hist" id="hist"></ul>
 </div>
 
@@ -444,12 +447,24 @@ function setEmpty(){
   document.body.classList.toggle('empty', !hasResults && !hasHistory && !busy);
 }
 
+let histHidden = false, histTimer = null;
 async function loadHistory(){
+  const q = $('#histSearch').value.trim();
   let d;
-  try { d = await (await fetch('/api/jobs')).json(); } catch(e){ return; }
+  try { d = await (await fetch('/api/jobs?' + new URLSearchParams({q, hidden: histHidden}))).json(); }
+  catch(e){ return; }
   const jobs = d.jobs || [];
-  $('#histCard').hidden = jobs.length === 0;
+  if(histHidden && !d.hidden_count) histHidden = false;
+  $('#histCard').hidden = !d.total && !d.hidden_count;
+  const hb = $('#histHiddenBtn');
+  hb.hidden = !d.hidden_count;
+  hb.textContent = histHidden ? 'Back to list' : `Hidden (${d.hidden_count})`;
   setEmpty();
+  if(!jobs.length){
+    $('#hist').innerHTML = `<li><span class="st">${q ? 'No analyses match "' + esc(q) + '".'
+      : 'Nothing here.'}</span></li>`;
+    return;
+  }
   $('#hist').innerHTML = jobs.map(j => {
     const when = j.created_at ? new Date(j.created_at).toLocaleString(undefined,
       {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}) : '';
@@ -458,19 +473,25 @@ async function loadHistory(){
     const col = j.state === 'error' ? 'var(--bad)'
               : (j.state === 'done' ? 'var(--dim)' : 'var(--warn)');
     return `<li data-id="${esc(j.job_id)}" data-state="${esc(j.state)}">
-      <span class="nm">${esc(j.source_name || j.job_id)}</span>
+      <span class="nm" title="${esc(j.source_name || '')}">${esc(j.title || j.source_name || j.job_id)}</span>
       ${tones}
       <span class="st" style="color:${col}">${esc(STATE_LABEL[j.state]||j.state)}</span>
       <span class="st">${esc(when)}</span>
       <span class="acts">
         <button class="linkbtn open" ${j.state==='done'?'':'disabled'}>Open</button>
+        <button class="linkbtn hide">${histHidden ? 'Unhide' : 'Hide'}</button>
         <button class="linkbtn del">Delete</button>
       </span>
     </li>`;
   }).join('');
-  $('#hist').querySelectorAll('li').forEach(li => {
+  $('#hist').querySelectorAll('li[data-id]').forEach(li => {
     const id = li.dataset.id;
     li.querySelector('.open').onclick = () => openJob(id);
+    li.querySelector('.hide').onclick = async () => {
+      await fetch('/api/job/' + id + '/hidden', {method:'POST',
+        headers:{'Content-Type':'application/json'}, body: JSON.stringify({hidden: !histHidden})});
+      loadHistory();
+    };
     li.querySelector('.del').onclick = async () => {
       if(!confirm('Delete this analysis and its audio?')) return;
       await fetch('/api/job/' + id, {method:'DELETE'});
@@ -492,6 +513,8 @@ async function openJob(id){
 }
 
 $('#histRefresh').onclick = loadHistory;
+$('#histHiddenBtn').onclick = () => { histHidden = !histHidden; loadHistory(); };
+$('#histSearch').oninput = () => { clearTimeout(histTimer); histTimer = setTimeout(loadHistory, 250); };
 
 const drop = $('#drop');
 const picker = Object.assign(document.createElement('input'), {type:'file', accept:'audio/*'});
@@ -765,6 +788,11 @@ function render(res){
         <div>
           <div class="chain" id="chain-${id}">${p.chain.map(b=>blockHtml(b,p)).join('')}</div>
           <div class="why" style="margin-top:10px">Runner-up amps: ${p.amp_alternatives.map(a=>esc(a.model+' ('+a.ref+')')).join(', ')}</div>
+          <div class="row" style="margin-top:10px">
+            <button class="ghost" onclick="location.href='/api/job/${jobId}/tone/${id}/patch?axes='+encodeURIComponent(JSON.stringify((TONE[${id}]||{}).cur||{}))">QuickTone preset file</button>
+            <span class="sub">Import it in QuickTone. It sets the models, which blocks are on, the amp
+              knobs and reverb level; set the other effect knobs, EQ and gate from the list above.</span>
+          </div>
           <div class="vpanel">
             <b style="font-size:13px">Validate against the pedal</b>
             <div class="why">Dial this preset in, reamp the excerpt through the MG-300 over USB

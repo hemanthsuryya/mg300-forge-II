@@ -69,6 +69,10 @@ class Job(Base):
     tone_count: Mapped[int] = mapped_column(Integer, default=0)
     tempo_bpm: Mapped[int] = mapped_column(Integer, default=0)
     from_url: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Song title read from the link's metadata; source_name keeps the link itself.
+    title: Mapped[str | None] = mapped_column(String(500))
+    # Hidden from the history list, but nothing is deleted.
+    hidden: Mapped[bool] = mapped_column(Boolean, default=False)
 
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True),
                                                     default=_now, index=True)
@@ -78,6 +82,8 @@ class Job(Base):
 
     def public(self) -> dict:
         return {"job_id": self.id, "source_name": self.source_name,
+                "title": self.title, "from_url": bool(self.from_url),
+                "hidden": bool(self.hidden),
                 "state": self.state, "progress": self.progress,
                 "error": self.error, "tone_count": self.tone_count,
                 "tempo_bpm": self.tempo_bpm,

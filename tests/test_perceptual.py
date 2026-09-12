@@ -76,7 +76,7 @@ def amp_of(p):
 
 lo = amp_of(preset_for(m, {**ax, "grit": max(ax["grit"] - 40, 5)}))
 hi = amp_of(preset_for(m, {**ax, "grit": min(ax["grit"] + 40, 98)}))
-fam = {a["name"]: a["family"] for a in mapper.CATALOG["amps"]}
+fam = {a["name"]: a["family"] for a in mapper.CATALOG["amps"] if "family" in a}
 order = {"clean": 0, "acoustic": 0, "crunch": 1, "hi_gain": 2, "metal": 3}
 check("grit up -> hotter amp family or more gain",
       order[fam[hi["model"]]] > order[fam[lo["model"]]]
@@ -105,7 +105,8 @@ for axis, module in (("space", "RVB"), ("echo", "DLY"), ("swirl", "MOD")):
 print("\n== wah takes the shared EFX slot, and says so ==")
 w = preset_for(M["crunch chords"], {**ax, "wah": 80})
 efx = next(b for b in w["chain"] if b["module"] == "EFX")
-check("wah -> Touch Wah in EFX", efx["model"] == "Touch Wah", efx["model"])
+check("wah -> Touch Wah in EFX", efx["model"] == mapper.entry("efx", "touch_wah")["name"],
+      efx["model"])
 check("wah conflict is explained", "displaced" in efx.get("why", "").lower(),
       efx.get("why", "")[:60])
 
@@ -114,9 +115,11 @@ print("\n== cross-coupling: an axis must not disturb unrelated blocks (T4-T12) =
 # EFX appears for body/bite on purpose: when a drive pedal is in the chain its
 # own Tone and Bass controls are part of the tone stack, so the mapper sets them
 # from the same spectral tilt. That is intended behaviour, not cross-talk.
+# IR appears for every axis that can change the amp, because each amp brings
+# its own paired cab.
 ALLOWED = {"grit": {"AMP", "EFX", "COMP", "NG", "EQ", "IR"},
            "body": {"AMP", "EQ", "IR", "EFX"}, "bite": {"AMP", "EQ", "IR", "EFX"},
-           "honk": {"AMP", "EQ", "EFX"}, "squash": {"COMP"},
+           "honk": {"AMP", "EQ", "EFX", "IR"}, "squash": {"COMP"},
            "space": {"RVB"}, "echo": {"DLY"}, "swirl": {"MOD"}, "wah": {"EFX"}}
 base_blocks = blocks(preset_for(M["crunch chords"], ax))
 for axis, allowed in ALLOWED.items():

@@ -125,7 +125,7 @@ pc = preset_for(S.rig(RHY, drive=1.0))
 pm = preset_for(S.rig(RHY, drive=45.0))
 amp_c = next(b for b in pc["chain"] if b["module"] == "AMP")
 amp_m = next(b for b in pm["chain"] if b["module"] == "AMP")
-fam = {a["name"]: a["family"] for a in mapper.CATALOG["amps"]}
+fam = {a["name"]: a["family"] for a in mapper.CATALOG["amps"] if "family" in a}
 check("clean rig -> clean/crunch amp", fam[amp_c["model"]] in ("clean", "crunch"),
       f"{amp_c['model']} ({fam[amp_c['model']]}) gain {amp_c['params']['Gain']}")
 check("metal rig -> hi_gain/metal amp", fam[amp_m["model"]] in ("hi_gain", "metal"),
