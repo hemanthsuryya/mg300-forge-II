@@ -3,7 +3,7 @@ jobs/*
 !jobs/.gitkeep
 __pycache__/
 *.pyc
-samples/*.wav
+samples/*
 .env
 data/
 *.bak
