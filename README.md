@@ -17,6 +17,8 @@ each distinct tone.
 
 Runs entirely on your machine. Nothing is uploaded anywhere.
 
+![Tone Sear home page: drop a song or paste a link, pick how many tones to look for, and reopen past analyses below](docs/images/home.png)
+
 ---
 
 ## Run it with Docker (recommended)
@@ -181,6 +183,8 @@ part. The app would rather say nothing than guess.
 Every tone card carries a nine-axis radar. It starts where the analysis put it,
 and you drag it from there.
 
+![A tone card: where the tone appears in the song, the radar and sliders on the left, and each MG-300 MKII block with its settings and the reason for it on the right](docs/images/tone-card.png)
+
 | Axis | In plain terms | Measured from | Moves |
 |---|---|---|---|
 | **Drive** | distortion, saturation | crest factor + spectral valley depth | AMP Gain, drive pedal choice |
@@ -221,6 +225,8 @@ through the *same* measurement pipeline, and you get a per-axis difference, a
 match score, and an instruction per block - "Bass is 14 too low", not "sounds
 thin". The captured tone is drawn on the same radar in green, so the shape of the
 mismatch is visible at a glance.
+
+![The bottom of a tone card: the QuickTone preset download, the Validate panel for a capture from the pedal, and the raw measurements behind every choice](docs/images/validate.png)
 
 **[docs/VALIDATION.md](docs/VALIDATION.md)** has the wiring, and 16 test cases in
 three tiers: prove the loop is honest (null loop, level independence,

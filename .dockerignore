@@ -9,6 +9,7 @@ jobs
 samples/reference_presets/*
 !samples/reference_presets/.gitkeep
 docs/*.pdf
+docs/images
 .env
 *.wav
 *.mp3
